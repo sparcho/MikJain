@@ -403,6 +403,108 @@ footer .lnk{color:var(--on-ox);margin-top:22px}
   .gate .mono{font-size:54px}
   .mine{padding:26px 20px}
 }
+
+/* ---------- programme flow + lanes ---------- */
+.daytabs{display:flex;gap:0;border-block:1px solid var(--line);overflow-x:auto;scrollbar-width:none;margin-bottom:0}
+.daytabs::-webkit-scrollbar{display:none}
+.daytabs button{flex:1 0 150px;background:none;border:0;border-left:1px solid var(--line);padding:16px 14px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.daytabs button:first-child{border-left:0}
+.daytabs b{font:400 21px/1.15 var(--serif);color:var(--cocoa);font-weight:400}
+.daytabs button[aria-pressed=true]{background:var(--ox)}
+.daytabs button[aria-pressed=true] b{color:var(--on-ox)}.daytabs button[aria-pressed=true] .caps{color:var(--on-ox-2)}
+.pband{padding:38px 0;margin-top:26px}
+.pflow{padding-bottom:40px}
+.draftnote{margin-top:30px;font:italic 18px/1.45 var(--serif);color:var(--muted);border-left:2px solid var(--mari);padding:4px 0 4px 14px}
+.draftnote b{font-style:normal;font-weight:400;color:var(--mari-t)}
+.flowwrap{overflow-x:auto;padding:26px 2px 14px;scrollbar-width:thin}
+.flow,.chain{display:flex;align-items:stretch;min-width:max-content}
+.fnode{width:210px;flex:none;background:var(--paper-2);border:0;box-shadow:inset 0 0 0 1px var(--line-2);padding:16px 16px 14px;text-align:left;display:flex;flex-direction:column;gap:3px}
+.fnode .ic{width:30px;height:30px;color:var(--rust);margin-bottom:6px}
+.fnode .tm{font:600 10.5px/1.4 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--rust)}
+.fnode .tt{font:400 19px/1.22 var(--serif);color:var(--cocoa)}
+.fnode .pl{font:italic 15px/1.3 var(--serif);color:var(--muted)}
+.fnode .sw{margin-top:8px}
+.fnode .nsteps{margin-top:auto;padding-top:10px;color:var(--rust)}
+.fnode:hover{box-shadow:inset 0 0 0 1px var(--rust)}
+.fnode.on{background:#fff;box-shadow:inset 0 0 0 1.5px var(--rust),0 6px 18px -10px rgba(90,26,28,.35)}
+.farrow{flex:none;width:44px;display:grid;place-items:center;color:var(--adobe)}
+.inside{margin-top:22px;padding:28px 28px 18px;background:var(--paper-2);box-shadow:inset 0 0 0 1px rgba(142,74,43,.35)}
+.inside h3{font:400 30px/1.1 var(--serif);color:var(--ox);margin:6px 0 14px}
+.scen{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding:16px 0;border-top:1px solid var(--line)}
+.scen .sc{color:var(--rust);padding-top:12px}
+.chain{overflow-x:auto;min-width:0;padding-bottom:6px}
+.chain .farrow{width:30px}
+.chain .farrow svg{width:24px}
+.chip{flex:none;width:176px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.chip .no{font:400 15px/1 var(--serif);color:var(--adobe)}
+.chip b{font:400 17px/1.25 var(--serif);color:var(--cocoa);font-weight:400}
+.chip span:not(.no){font:13px/1.4 var(--sans);color:var(--muted)}
+.lanebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.lanebar .sp{flex:1}
+.psel.dark{color:var(--cocoa);border-color:var(--line-2);background-image:linear-gradient(45deg,transparent 50%,var(--adobe-d) 50%),linear-gradient(135deg,var(--adobe-d) 50%,transparent 50%)}
+.klegend{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center}
+.kchip{font:600 9.5px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border-radius:2px;white-space:nowrap}
+.k-ritual{background:var(--ox);color:var(--on-ox)}.k-meal{background:#F5E2BF;color:var(--mari-t)}.k-chill{background:#E1E5D3;color:var(--olive)}
+.k-task{background:#F2DCCB;color:var(--rust)}.k-prep{background:var(--sand);color:var(--cocoa)}.k-move{background:#DCE4F2;color:var(--haldi)}
+.k-standby{background:repeating-linear-gradient(135deg,#EFE6D6 0 6px,#E5D8C2 6px 12px);color:var(--adobe-d)}
+.lanes{overflow-x:auto;background:var(--paper-2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.lgrid{display:grid;min-width:max-content}
+.lname{position:sticky;left:0;z-index:2;background:var(--paper-2);padding:12px 14px;border-top:1px solid var(--line);border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;gap:3px}
+.lname b{font:400 16px/1.2 var(--serif);color:var(--cocoa);font-weight:400}
+.lname span{font:12px/1.35 var(--sans);color:var(--muted)}
+.lname.rul{border-top:0}
+.ltrack{position:relative;min-height:66px;border-top:1px solid var(--line);background-image:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 84px)}
+.ltrack.ruler{min-height:30px;border-top:0;background:none}
+.ruler span{position:absolute;top:8px;transform:translateX(4px);font:600 10px/1 var(--sans);letter-spacing:.1em;color:var(--adobe-d)}
+.dim{opacity:.28}
+.blk2{position:absolute;top:8px;bottom:8px;border:0;border-radius:2px;padding:6px 8px;text-align:left;overflow:hidden;display:flex;flex-direction:column;gap:2px;cursor:pointer}
+.blk2 b{font:600 12px/1.25 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk2 span{font:11px/1.2 var(--sans);opacity:.8;white-space:nowrap}
+.blk2:hover,.blk2.on{outline:1.5px solid var(--cocoa);outline-offset:1px}
+.bdetail{margin-top:14px;padding:22px 24px;background:#fff;box-shadow:inset 0 0 0 1px rgba(142,74,43,.4)}
+.bdetail h3{font:400 26px/1.15 var(--serif);color:var(--ox);margin:6px 0 8px}
+.bdetail p.i,.i2{font:italic 17px/1.45 var(--serif);color:var(--muted)}
+.bdetail .lnk{margin-top:12px}
+.myday{margin-top:40px}
+.myday h3{font:400 30px/1.1 var(--serif);color:var(--ox);margin:6px 0 10px}
+.myday h3 i{color:var(--rust)}
+/* ---------- calendar ---------- */
+.calwrap{padding-bottom:110px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-left:1px solid var(--line);border-top:1px solid var(--line);margin-top:16px}
+.cdh{padding:8px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);text-align:left}
+.cday{min-height:104px;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:none;padding:7px 7px 6px;text-align:left;display:flex;flex-direction:column;gap:5px;min-width:0;cursor:pointer}
+.cday.out{cursor:default;background:rgba(234,223,204,.25)}
+.cday .dn{font:400 19px/1 var(--serif);color:var(--cocoa);width:28px;height:28px;display:grid;place-items:center;margin:-3px 0 0 -3px}
+.cday.past .dn,.cday.past .ev{opacity:.45}
+.cday.today .dn{background:var(--rust);color:#fff;border-radius:50%}
+.cday.wed{background:rgba(90,26,28,.09)}
+.cday.wed .dn{color:var(--ox)}
+.cday:hover{background:rgba(185,142,100,.12)}
+.cday.sel{box-shadow:inset 0 0 0 1.5px var(--rust);background:#fff}
+.evs{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ev{font:11.5px/1.25 var(--sans);padding:2px 5px;border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.key{background:var(--ox);color:var(--on-ox)}.ev.task{background:#F5E2BF;color:var(--mari-t)}.ev.done{background:#E1E5D3;color:var(--olive);text-decoration:line-through}
+.more2{font:600 10px/1 var(--sans);color:var(--adobe-d)}
+.kdot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+.kdot.key{background:var(--ox)}.kdot.task{background:var(--mari)}.kdot.done{background:var(--olive)}.kdot.wedsw{background:rgba(90,26,28,.18);border-radius:2px}
+.dpanel{margin-top:14px;padding:20px 22px;background:#fff;box-shadow:inset 0 0 0 1px rgba(142,74,43,.4)}
+.dpanel .drow{grid-template-columns:16px 1fr;align-items:baseline}
+.dpanel .kdot{margin-top:6px}
+.lnkt{background:none;border:0;padding:0;text-align:left;font:400 20px/1.3 var(--serif);color:var(--cocoa)}
+.lnkt:hover{color:var(--rust)}
+@media (max-width:860px){.scen{grid-template-columns:1fr;gap:8px}.scen .sc{padding-top:0}}
+@media (max-width:640px){
+  .cday{min-height:58px;padding:5px}
+  .cday .dn{font-size:16px;width:24px;height:24px}
+  .evs{flex-direction:row;flex-wrap:wrap;gap:3px}
+  .ev{font-size:0;width:7px;height:7px;padding:0;border-radius:50%}
+  .more2{display:none}
+  .cdh{padding:6px 4px;font-size:9px;letter-spacing:.08em}
+  .inside{padding:22px 16px 12px}
+  .fnode{width:180px}
+  .lgrid{--lw:116px}
+  .lname span{display:none}
+}
 </style>
 </head>
 <body>
@@ -465,7 +567,7 @@ footer .lnk{color:var(--on-ox);margin-top:22px}
       <figure class="arch c"><img src="img/varmala.jpg" alt="The varmala facade at Fort Rajwada"></figure>
       <figure class="arch f r"><img src="img/candles.jpg" alt="Candlelit table detail"></figure>
     </div>
-    <p class="lede">Ana <i>&amp;</i> Yash, and the <span id="yesWords">hundred and fifty</span> who said yes.</p>
+    <p class="lede">Anna <i>&amp;</i> Yash, and the <span id="yesWords">hundred and fifty</span> who said yes.</p>
     <p class="caps sub">Friday 30 &amp; Saturday 31 January 2027</p>
     
   </div>
@@ -582,15 +684,15 @@ footer .lnk{color:var(--on-ox);margin-top:22px}
 
 <!-- ================= PROGRAMME ================= -->
 <section data-view="programme" hidden>
-  <div class="wrap pg-h"><p class="caps">Fort Rajwada · 29 Jan – 1 Feb</p><h1>The <i>programme</i></h1><p>Kept in line with the family's decisions by Claude.</p></div>
+  <div class="wrap pg-h"><p class="caps">Fort Rajwada · 29 Jan – 1 Feb</p><h1>The <i>programme</i></h1><p>The flow of each day, left to right, and who does what.</p></div>
   <div id="prog"></div>
-  <div class="wrap legend"><span class="sw p-confirmed">Confirmed</span><span class="sw p-assumed">Working assumption</span><span class="sw p-confirm">To confirm</span><span class="sw p-tentative">Planned</span></div>
+  <div class="wrap legend"><span class="caps">Moment status:</span><span class="sw p-confirmed">Confirmed</span><span class="sw p-assumed">Working assumption</span><span class="sw p-confirm">To confirm</span><span class="sw p-tentative">Planned</span></div>
 </section>
 
 <!-- ================= DATES ================= -->
 <section data-view="dates" hidden>
   <div class="wrap pg-h"><p class="caps">Deadlines &amp; milestones</p><h1>Key <i>dates</i></h1><p id="datesSub">Every date that matters between now and the wedding.</p></div>
-  <div class="wrap"><div class="col" id="dates" style="padding-bottom:110px"></div></div>
+  <div class="wrap"><div id="dates" class="calwrap"></div></div>
 </section>
 
 <!-- ================= DOCUMENTS ================= -->
@@ -660,7 +762,7 @@ async function api(action,body={}){
   if(!j.ok){const e=new Error(j.error||'Something went wrong.');e.code=j.code;throw e}
   return j;
 }
-function load(d){Object.assign(S,{me:d.me,tasks:d.tasks||[],activity:d.activity||[],programme:d.programme||[],dates:d.dates||[],docs:d.docs||[],people:d.people||[],meta:d.meta||{},guests:d.guests||[],rooms:d.rooms||[],blocks:d.blocks||[]});renderAll()}
+function load(d){Object.assign(S,{me:d.me,tasks:d.tasks||[],activity:d.activity||[],programme:d.programme||[],dates:d.dates||[],docs:d.docs||[],people:d.people||[],meta:d.meta||{},guests:d.guests||[],rooms:d.rooms||[],blocks:d.blocks||[],runsheet:d.runsheet||[]});renderAll()}
 async function refresh(quiet){try{const j=await api('data');load(j.data)}catch(e){if(e.code===401)signOut('Your session ended. Please sign in again.');else if(!quiet)toast(e.message)}}
 function showApp(on){$('#gate').hidden=on;$('#app').hidden=!on;if(on)route()}
 function signOut(msg){if(S.token)api('logout').catch(()=>{});S.token=null;store.set('hq-token',null);showApp(false);$('#pw').value='';const m=$('#loginMsg');m.textContent=msg||'Signed out.';m.className='gmsg'}
@@ -807,8 +909,8 @@ const RS=g=>/^y/i.test(g.rsvp||'')?'<span class="sw s-done">Coming</span>':/^n/i
 const DIETS=['Vegetarian','Jain','Vegan','Non-vegetarian'];
 function personalLink(g){const m=S.meta;if(!m.form_url)return'';let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
   if(m.form_entry_name)u+=`&entry.${m.form_entry_name}=${encodeURIComponent(g.name)}`;if(m.form_entry_code)u+=`&entry.${m.form_entry_code}=${encodeURIComponent(g.id)}`;return u}
-const inviteText=(g,link)=>`Hi ${first(g.name)}! Ana & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. So we can plan pickups, rooms and food, could you fill in your travel details here? It takes about 3 minutes.\n\n${link}\n\nThank you!`;
-const groupText=()=>`Hello everyone! Ana & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer.\n\nSo we can plan pickups, rooms and food, please fill in your travel details here (about 3 minutes, one form per couple or family is enough):\n\n${S.meta.form_url||'[form link]'}\n\nThank you!`;
+const inviteText=(g,link)=>`Hi ${first(g.name)}! Anna & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. So we can plan pickups, rooms and food, could you fill in your travel details here? It takes about 3 minutes.\n\n${link}\n\nThank you!`;
+const groupText=()=>`Hello everyone! Anna & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer.\n\nSo we can plan pickups, rooms and food, please fill in your travel details here (about 3 minutes, one form per couple or family is enough):\n\n${S.meta.form_url||'[form link]'}\n\nThank you!`;
 const waLink=(phone,text)=>{const d=String(phone||'').replace(/[^\d]/g,'');return d.length>=8?`https://wa.me/${d}?text=${encodeURIComponent(text)}`:''};
 async function copy(text,label){try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.append(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove()}toast(label||'Copied.')}
 function gFiltered(){const q=S.g.q.trim().toLowerCase();return S.guests.filter(g=>(!S.g.list||g.list===S.g.list)&&(!q||`${g.name} ${g.group} ${g.list} ${g.from_city} ${g.party_names} ${g.notes} ${g.room_block}`.toLowerCase().includes(q)))}
@@ -916,16 +1018,74 @@ function renderGuests(){
 }
 
 /* ---------- programme / dates / docs ---------- */
+/* ---------- programme: left-to-right flow + who-does-what lanes ---------- */
+const KINDS={ritual:'Ceremony',meal:'Food',chill:'Chill window',task:'Task',prep:'Getting ready',move:'Travel / arrival',standby:'On standby'};
+const LANE_ORDER=['Guests','Anna & Yash','Rajiv & Shalini','Arkadiy & Elena','Tauji & Animesh’s family','Standby crew','Sparsh','Hotel team'];
+const LANE_NOTE={'Standby crew':'Karnavir, Sameer and friends: running around, errands, a hand for elders'};
+const hm=s=>{const m=String(s||'').match(/(\d{1,2}):(\d{2})/);return m?(+m[1])+(+m[2])/60:null};
+const HOURW=84;
 function renderProgramme(){
-  const P=[...S.programme].sort((a,b)=>a.order-b.order);
-  $('#prog').innerHTML=P.map(d=>{const[w,...r]=String(d.title).split(' · ');return`<div class="pday"><div class="band"><div class="wrap"><div class="phead"><figure class="arch"><img src="img/${DAYIMG[d.id]||'fort'}.jpg" alt="" loading="lazy"></figure><div><p class="caps">${esc(d.label)}</p><h2>${r.length?`${esc(w)} · <i>${esc(r.join(' · '))}</i>`:esc(w)}</h2>${d.note?`<p class="n">${esc(d.note)}</p>`:''}</div></div></div></div><div class="wrap pbody"><div class="col">${rail(d.items||[])}</div></div></div>`}).join('');
+  const P=[...S.programme].sort((a,b)=>a.order-b.order);const box=$('#prog');
+  if(!P.length){box.innerHTML='<p class="empty" style="text-align:center">Programme not added yet.</p>';return}
+  if(!S.pday||!P.find(d=>d.id===S.pday))S.pday=(P.find(d=>d.id==='d1')||P[0]).id;
+  const d=P.find(x=>x.id===S.pday),R=(S.runsheet||[]).filter(r=>r.day_id===d.id);
+  const items=[...(d.items||[])].map((it,k)=>({...it,order:it.order??k+1})).sort((a,b)=>a.order-b.order);
+  const stepsFor=o=>R.filter(r=>r.kind==='step'&&String(r.touch)===String(o));
+  if(S.pnode==null||!items.find(i=>String(i.order)===String(S.pnode)))S.pnode=(items.find(i=>stepsFor(i.order).length)||items[0]||{}).order;
+  const [w,...rest]=String(d.title).split(' · ');
+  const tabs=`<div class="wrap"><div class="daytabs" role="group" aria-label="Day">${P.map(x=>`<button data-pday="${esc(x.id)}" aria-pressed="${x.id===d.id}"><span class="caps">${esc(x.label)}</span><b>${esc(String(x.title).split(' · ').pop())}</b></button>`).join('')}</div></div>`;
+  const head=`<div class="band pband"><div class="wrap"><div class="phead"><figure class="arch"><img src="img/${DAYIMG[d.id]||'fort'}.jpg" alt="" loading="lazy"></figure><div><p class="caps">${esc(d.label)}</p><h2>${rest.length?`${esc(w)} · <i>${esc(rest.join(' · '))}</i>`:esc(w)}</h2>${d.note?`<p class="n">${esc(d.note)}</p>`:''}</div></div></div></div>`;
+  const arrow='<span class="farrow" aria-hidden="true"><svg width="34" height="12" viewBox="0 0 34 12"><path d="M0 6h31M26 1l6 5-6 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></span>';
+  const flow=`<div class="flowwrap"><div class="flow">${items.map((i,k)=>{const n=stepsFor(i.order).length;return`${k?arrow:''}<button class="fnode${String(i.order)===String(S.pnode)?' on':''}" data-pnode="${esc(i.order)}"><svg class="ic"><use href="#i-${ICON(i.title)}"/></svg><span class="tm">${esc(i.time)}</span><span class="tt">${esc(i.title)}</span>${i.place&&i.place!=='TBD'?`<span class="pl">${esc(i.place)}</span>`:''}<span class="sw p-${esc(i.status)}">${PSTAT[i.status]||esc(i.status)}</span>${n?`<span class="caps nsteps">${n} steps inside →</span>`:''}</button>`}).join('')}</div></div>`;
+  const node=items.find(i=>String(i.order)===String(S.pnode));
+  const st=node?stepsFor(node.order):[];const scen=[...new Set(st.map(r=>r.scenario))];
+  const inside=node?`<div class="inside"><p class="caps">Inside this moment</p><h3>${esc(node.title)}</h3>${st.length?scen.map(sc=>{const ch=st.filter(r=>r.scenario===sc).sort((a,b)=>a.step-b.step);
+      return`<div class="scen"><p class="caps sc">${esc(sc)}</p><div class="chain">${ch.map((r,k)=>`${k?arrow:''}<div class="chip"><span class="no num">${esc(r.step)}</span><b>${esc(r.title)}</b>${r.detail?`<span>${esc(r.detail)}</span>`:''}</div>`).join('')}</div></div>`}).join('')
+      :`<p class="empty">No step-by-step flow yet for this moment. It gets filled in after the run-through with Mom and Dad.</p>`}</div>`:'';
+  // lanes
+  const L=R.filter(r=>r.kind!=='step'&&hm(r.start)!=null);
+  const lanes=[...new Set(L.map(r=>r.lane))].sort((a,b)=>((LANE_ORDER.indexOf(a)+1)||99)-((LANE_ORDER.indexOf(b)+1)||99));
+  let h0=Math.floor(Math.min(...L.map(r=>hm(r.start)),24)),h1=Math.ceil(Math.max(...L.map(r=>Math.max(hm(r.end)||hm(r.start)+1,hm(r.start)+1)),0));
+  if(!L.length){h0=8;h1=24}h1=Math.min(Math.max(h1,h0+4),24);
+  const W=(h1-h0)*HOURW,x=t=>(t-h0)*HOURW;
+  const ruler=`<div class="lname rul"></div><div class="ltrack ruler" style="width:${W}px">${Array.from({length:h1-h0+1},(_,k)=>`<span style="left:${k*HOURW}px">${pad((h0+k)%24)}:00</span>`).join('')}</div>`;
+  const sel=S.plane&&lanes.includes(S.plane)?S.plane:'';
+  const grid=lanes.map(ln=>{const rs=L.filter(r=>r.lane===ln);return`<div class="lname${sel&&sel!==ln?' dim':''}"><b>${esc(ln)}</b>${LANE_NOTE[ln]?`<span>${esc(LANE_NOTE[ln])}</span>`:''}</div><div class="ltrack${sel&&sel!==ln?' dim':''}" style="width:${W}px">${rs.map(r=>{const a=hm(r.start),b=hm(r.end)??a+1,wd=Math.max(30,(b-a)*HOURW-4);return`<button class="blk2 k-${esc(r.kind)}${S.pblock===r.id?' on':''}" data-pblock="${esc(r.id)}" style="left:${x(a)+2}px;width:${wd}px" title="${esc(r.start)}–${esc(r.end)} · ${esc(r.title)}"><b>${esc(r.title)}</b><span>${esc(r.start)}–${esc(r.end)}</span></button>`}).join('')}</div>`}).join('');
+  const blk=L.find(r=>r.id===S.pblock);
+  const bd=blk?`<div class="bdetail"><p class="caps">${esc(blk.lane)} · ${esc(blk.start)}–${esc(blk.end)} · ${KINDS[blk.kind]||esc(blk.kind)}</p><h3>${esc(blk.title)}</h3>${blk.detail?`<p class="i">${esc(blk.detail)}</p>`:''}${blk.place?`<p class="caps">${esc(blk.place)}</p>`:''}<button class="lnk" data-pblock="">Close</button></div>`:'';
+  const myday=sel?`<div class="myday"><p class="caps">${esc(sel)} · ${esc(d.label)}</p><h3>The day, <i>in order</i></h3>${L.filter(r=>r.lane===sel).sort((a,b)=>hm(a.start)-hm(b.start)).map(r=>`<div class="drow"><div class="dnum"><b class="num" style="font-size:22px">${esc(r.start)}</b><span class="caps">to ${esc(r.end)}</span></div><div><p class="t">${esc(r.title)}</p>${r.detail?`<p class="w i2">${esc(r.detail)}</p>`:''}</div><span class="kchip k-${esc(r.kind)}">${KINDS[r.kind]||esc(r.kind)}</span></div>`).join('')}</div>`:'';
+  const draft=R.some(r=>r.status==='draft');
+  const lanesHTML=L.length?`<div class="sec-h" style="margin:70px 0 22px"><p class="caps">Who does what</p><h2>Everyone’s <i>day</i></h2><svg class="sprig"><use href="#sprig"/></svg></div>
+    <div class="lanebar"><label class="caps">Show the day for</label><select class="psel dark" id="plane"><option value="">Everyone</option>${lanes.map(l=>`<option${l===sel?' selected':''}>${esc(l)}</option>`).join('')}</select><span class="sp"></span><span class="klegend">${Object.entries(KINDS).map(([k,l])=>`<span class="kchip k-${k}">${l}</span>`).join('')}</span></div>
+    <div class="lanes"><div class="lgrid" style="grid-template-columns:var(--lw,180px) ${W}px">${ruler}${grid}</div></div>${bd}${myday}`:'';
+  box.innerHTML=tabs+head+`<div class="wrap pflow">${draft?`<p class="draftnote"><b>Draft.</b> The flows and everyone’s timings below are a first proposal, to run through with Mom and Dad before anything is fixed.</p>`:''}<div class="sec-h" style="margin:46px 0 4px"><p class="caps">The flow</p><h2>${esc(d.label)}, <i>left to right</i></h2><svg class="sprig"><use href="#sprig"/></svg></div>${flow}${inside}${lanesHTML}</div>`;
 }
+
+/* ---------- dates: calendar Oct → Feb ---------- */
+const WEDDING=['2027-01-29','2027-01-30','2027-01-31','2027-02-01'];
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+function calEvents(){const m=new Map();const add=(k,e)=>{m.has(k)||m.set(k,[]);m.get(k).push(e)};
+  S.dates.forEach(d=>parse(d.date)&&add(d.date,{kind:'key',t:d.what,w:d.who}));
+  S.tasks.filter(t=>t.due&&parse(t.due)).forEach(t=>add(t.due,{kind:t.status==='done'?'done':'task',t:t.title,w:t.waitingOn,id:t.id}));
+  return m}
 function renderDates(){
-  const D=[...S.dates].filter(d=>parse(d.date)).sort((a,b)=>a.date.localeCompare(b.date));const by=new Map();
-  D.forEach(d=>{const x=parse(d.date),k=`${MONL[x.getMonth()]} <i>${x.getFullYear()}</i>`;by.has(k)||by.set(k,[]);by.get(k).push(d)});
-  const up=D.filter(d=>daysTo(d.date)>=0).length;
-  if(D.length)$('#datesSub').textContent=`${up} still ahead, ${D.length-up} behind us.`;
-  $('#dates').innerHTML=[...by].map(([m,ds])=>`<div class="month"><h2>${m}</h2>${ds.map(d=>{const x=parse(d.date),n=daysTo(d.date),b=n<0?{c:'c-calm',w:'passed'}:dueBits(d.date);return`<div class="drow${n<0?' past':''}"><div class="dnum"><b class="num">${x.getDate()}</b><span class="caps">${MON[x.getMonth()]}</span></div><div><p class="t">${esc(d.what)}</p><p class="caps w">${esc(d.who||'')}</p></div><span class="caps lft ${b.c}">${b.w}</span></div>`}).join('')}</div>`).join('');
+  const ev=calEvents(),t0=today(),tIso=iso(t0);
+  const start=new Date(t0.getFullYear(),t0.getMonth(),1),end=new Date(2027,1,1);
+  const up=S.dates.filter(d=>parse(d.date)&&daysTo(d.date)>=0).length;
+  $('#datesSub').textContent=`${daysTo('2027-01-30')} days to the wedding · ${up} key dates ahead. Tap a day to see what’s on.`;
+  if(!S.cday){const nx=[...ev.keys()].filter(k=>k>=tIso).sort()[0];S.cday=nx||tIso}
+  let html='';
+  for(let m=new Date(start);m<=end;m=new Date(m.getFullYear(),m.getMonth()+1,1)){
+    const y=m.getFullYear(),mo=m.getMonth(),first=(new Date(y,mo,1).getDay()+6)%7,days=new Date(y,mo+1,0).getDate();
+    let cells='';for(let i=0;i<first;i++)cells+='<div class="cday out" aria-hidden="true"></div>';
+    for(let dd=1;dd<=days;dd++){const k=`${y}-${pad(mo+1)}-${pad(dd)}`,es=ev.get(k)||[],past=k<tIso;
+      cells+=`<button class="cday${past?' past':''}${k===tIso?' today':''}${WEDDING.includes(k)?' wed':''}${k===S.cday?' sel':''}" data-cday="${k}" aria-label="${dd} ${MONL[mo]}${es.length?`, ${es.length} item${es.length>1?'s':''}`:''}"><span class="dn num">${dd}</span><span class="evs">${es.slice(0,3).map(e=>`<span class="ev ${e.kind}">${esc(e.t)}</span>`).join('')}${es.length>3?`<span class="more2">+${es.length-3}</span>`:''}</span></button>`}
+    const selIn=S.cday&&S.cday.startsWith(`${y}-${pad(mo+1)}`);
+    let panel='';
+    if(selIn){const x=parse(S.cday),es=ev.get(S.cday)||[],n=daysTo(S.cday);
+      panel=`<div class="dpanel"><p class="caps">${DOW[x.getDay()]} ${x.getDate()} ${MONL[x.getMonth()]} · ${n===0?'today':n>0?`in ${n} days`:`${-n} days ago`}</p>${es.length?es.map(e=>`<div class="drow"><span class="kdot ${e.kind}"></span><div>${e.id?`<button class="t lnkt" data-open="${esc(e.id)}">${esc(e.t)}</button>`:`<p class="t">${esc(e.t)}</p>`}<p class="caps w">${e.kind==='key'?'Key date':e.kind==='done'?'Task · done':'Task due'}${e.w?` · ${esc(e.w)}`:''}</p></div></div>`).join(''):'<p class="empty">Nothing on this day.</p>'}</div>`}
+    html+=`<div class="month"><h2>${MONL[mo]} <i>${y}</i></h2><div class="cal">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(w=>`<span class="cdh caps">${w}</span>`).join('')}${cells}</div>${panel}</div>`}
+  $('#dates').innerHTML=`<div class="klegend" style="margin-top:6px"><span class="kdot key"></span><span class="caps">Key date</span><span class="kdot task"></span><span class="caps">Task due</span><span class="kdot done"></span><span class="caps">Done</span><span class="kdot wedsw"></span><span class="caps">Wedding days</span></div>`+html;
 }
 function thumb(d){const t=`${d.title} ${d.kind}`.toLowerCase();
   if(/decor/.test(t))return'<img src="img/th-decor.jpg" alt="" loading="lazy">';
@@ -946,7 +1106,7 @@ const goTracker=f=>{S.f={status:'active',who:'',type:'',q:'',...f};$('#q').value
 
 /* ---------- events ---------- */
 document.addEventListener('click',async ev=>{
-  const el=ev.target.closest('[data-go],[data-open],[data-who],[data-group],[data-toggle],[data-s],[data-quick],[data-edit],[data-del],[data-confirmdel],[data-cancel],[data-addin],[data-gtab],[data-gch],[data-grow],[data-gedit],[data-copylink],[data-copymsg],[data-copygroup],[data-copyform]');if(!el)return;
+  const el=ev.target.closest('[data-go],[data-open],[data-who],[data-group],[data-toggle],[data-s],[data-quick],[data-edit],[data-del],[data-confirmdel],[data-cancel],[data-addin],[data-gtab],[data-gch],[data-grow],[data-gedit],[data-copylink],[data-copymsg],[data-copygroup],[data-copyform],[data-pday],[data-pnode],[data-pblock],[data-cday]');if(!el)return;
   const D=el.dataset;
   if(D.go){const g=D.go;goTracker(g==='decisions'?{type:'decision'}:{status:g});return}
   if(D.open){const t=S.tasks.find(x=>x.id===D.open);if(!t)return;goTracker({status:'all'});S.open.add(t.area);S.openRow=t.id;renderTracker();setTimeout(()=>document.getElementById('row-'+t.id)?.scrollIntoView({block:'center'}),60);return}
@@ -960,6 +1120,10 @@ document.addEventListener('click',async ev=>{
   if(D.quick){el.closest('.note')?.classList.add('busy');await saveTask({id:D.quick,status:D.to,_change:D.to==='done'?'marked done':'reopened'},D.to==='done'?'Marked done.':'Reopened.');return}
   if(D.del){el.parentElement.innerHTML=`<span class="msg">Delete for everyone?</span> <button class="btn danger" data-confirmdel="${esc(D.del)}">Yes, delete</button>`;return}
   if(D.confirmdel){try{await api('deleteTask',{id:D.confirmdel});S.openRow=null;await refresh(true);toast('Deleted.')}catch(e){toast(e.message)}return}
+  if(D.pday){S.pday=D.pday;S.pnode=null;S.pblock=null;renderProgramme();return}
+  if(D.pnode){S.pnode=D.pnode;renderProgramme();return}
+  if(D.pblock!==undefined){S.pblock=D.pblock||null;renderProgramme();if(S.pblock)setTimeout(()=>$('.bdetail')?.scrollIntoView({block:'nearest',behavior:'smooth'}),30);return}
+  if(D.cday){S.cday=D.cday;renderDates();return}
   if(D.gtab){S.g.tab=D.gtab;S.gRow=null;S.gEdit=null;if(location.hash!=='#guests')location.hash='#guests';renderGuests();return}
   if(D.gch){S.gopen.has(D.gch)?S.gopen.delete(D.gch):S.gopen.add(D.gch);prefs.gopen=[...S.gopen];savePrefs();renderGuests();return}
   if(D.grow){S.gRow=S.gRow===D.grow?null:D.grow;S.gEdit=null;renderGuests();return}
@@ -977,6 +1141,7 @@ $('#gCol').onclick=()=>{$$('#gBody [data-gch]').forEach(b=>S.gopen.delete(b.data
 $('#fWho').onchange=e=>{S.f.who=e.target.value;renderTracker()};
 $('#fType').onchange=e=>{S.f.type=e.target.value;renderTracker()};
 $('#gList').onchange=e=>{S.g.list=e.target.value;renderGuests()};
+document.addEventListener('change',e=>{if(e.target.id==='plane'){S.plane=e.target.value;S.pblock=null;renderProgramme()}});
 let qT;$('#q').addEventListener('input',e=>{clearTimeout(qT);qT=setTimeout(()=>{S.f.q=e.target.value;renderTracker()},140)});
 let gT;$('#gq').addEventListener('input',e=>{clearTimeout(gT);gT=setTimeout(()=>{S.g.q=e.target.value;renderGuests()},140)});
 document.addEventListener('submit',async ev=>{

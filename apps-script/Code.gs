@@ -11,8 +11,11 @@
 
 const TOKEN_DAYS = 45;
 const TZ = 'Asia/Kolkata';
-const TABS = ['Tasks', 'Activity', 'Programme', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
-const TEXT_TABS = ['Tasks', 'Activity', 'Programme', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
+const TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
+const FORM_TITLE = 'Anna & Yash · Jaisalmer · Your travel details';
+const FORM_DESC = '30 & 31 January 2027 · Fort Rajwada, Jaisalmer\n\nSo we can plan pickups, rooms and food, please tell us how and when you’re arriving. It takes about 3 minutes. If you’re filling this in for your partner or family too, one form for your party is enough.\n\nThank you! Anna & Yash';
+const FORM_THANKS = 'Thank you! We’ve got your details and will be in touch closer to the date. Anna & Yash';
+const TEXT_TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const TASK_FIELDS = ['area', 'title', 'type', 'waitingOn', 'next', 'due', 'status', 'priority', 'notes'];
 const GUEST_EDIT = ['rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
   'depart_date', 'depart_time', 'depart_mode', 'depart_ref', 'drop', 'extra_nights', 'room_block', 'room', 'room_with', 'diet', 'diet_notes', 'notes'];
@@ -215,6 +218,7 @@ function bundle_(u) {
     meta: pub,
     guests: guests,
     rooms: read_('Rooms'),
+    runsheet: ss_().getSheetByName('Runsheet') ? read_('Runsheet') : [],
     blocks: read_('Blocks'),
   };
 }
@@ -304,12 +308,10 @@ const FORM_MAP = {
 function createForm_() {
   const meta = meta_();
   if (meta.form_id) { try { FormApp.openById(meta.form_id); return meta.form_url; } catch (e) { /* recreate */ } }
-  const f = FormApp.create('Ana & Yash · Jaisalmer · Your travel details');
-  f.setDescription('30 & 31 January 2027 · Fort Rajwada, Jaisalmer\n\n' +
-    'So we can plan pickups, rooms and food, please tell us how and when you’re arriving. It takes about 3 minutes. ' +
-    'If you’re filling this in for your partner or family too, one form for your party is enough.\n\nThank you! Ana & Yash');
+  const f = FormApp.create(FORM_TITLE);
+  f.setDescription(FORM_DESC);
   f.setCollectEmail(false).setAllowResponseEdits(true).setShowLinkToRespondAgain(false).setProgressBar(true);
-  f.setConfirmationMessage('Thank you! We’ve got your details and will be in touch closer to the date. Ana & Yash');
+  f.setConfirmationMessage(FORM_THANKS);
 
   f.addSectionHeaderItem().setTitle('About you');
   f.addTextItem().setTitle('Your full name').setHelpText('As on your passport or ID').setRequired(true);
@@ -421,11 +423,23 @@ function setup() {
   const gN = importGuests_(meta.source_vedding_id);
   const rN = importRooms_(meta.source_roomplan_id);
   const url = createForm_();
+  migrate_();
   const blank = ss.getSheetByName('Sheet1');
   if (blank && ss.getSheets().length > 1 && blank.getLastRow() === 0) ss.deleteSheet(blank);
   const msg = 'Setup done. Guests imported: ' + gN + '. Room-plan rows: ' + rN + '. Travel form: ' + url;
   Logger.log(msg);
   return msg;
+}
+
+/** Safe, repeatable fixes for an existing sheet: Anna spelling and form wording. */
+function migrate_() {
+  const meta = meta_();
+  if (meta.form_id) {
+    try { FormApp.openById(meta.form_id).setTitle(FORM_TITLE).setDescription(FORM_DESC).setConfirmationMessage(FORM_THANKS); } catch (e) { Logger.log('Form text: ' + e); }
+  }
+  setMeta_('couple', 'Anna & Yash');
+  const ppl = read_('People').find(function (p) { return p.id === 'p07'; });
+  if (ppl && ppl.name === 'Ana') upsert_('People', { id: 'p07', name: 'Anna' });
 }
 
 /** Creates the tabs from SEED (defined in Seed.gs) if they don't exist yet. Never overwrites data. */
