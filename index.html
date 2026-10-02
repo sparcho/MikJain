@@ -359,6 +359,11 @@ footer .lnk{color:var(--on-ox);margin-top:22px}
 .grow .ln:hover .nm{color:var(--rust)}
 .grow.open .nm{color:var(--rust)}
 .grow .note{margin-left:0}
+.reply{margin-bottom:24px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.reply label{display:flex;flex-direction:column;gap:6px}
+.reply textarea{width:100%;background:#fff;border:1px solid var(--line-2);border-radius:2px;padding:10px 12px;font:400 18px/1.4 var(--serif);color:var(--cocoa);outline:0;resize:vertical;min-height:56px}
+.reply textarea:focus{border-color:var(--rust)}
+.reply .acts{margin-top:12px}
 .grow.no .nm{color:var(--adobe)}
 .sub{font:600 10px/1.4 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--adobe-d);padding:18px 0 6px 0;border-bottom:1px solid var(--line)}
 .rows .sub:first-child{padding-top:4px}
@@ -750,14 +755,16 @@ function itemHTML(t){
 function noteHTML(t){
   const kv=`<dl class="kv">
     <dt>Next step</dt><dd>${esc(t.next||'—')}</dd>
-    ${t.notes?`<dt>Notes</dt><dd>${esc(t.notes)}</dd>`:''}
+    ${t.notes?`<dt>Answers &amp; notes</dt><dd>${esc(t.notes)}</dd>`:''}
     <dt>Waiting on</dt><dd>${esc(t.waitingOn||'—')}</dd>
     <dt>Source</dt><dd>${esc(t.source||'—')}</dd>
     <dt>Entry</dt><dd>No. ${esc(t.n)} · ${esc({task:'Task',decision:'Decision',question:'Question'}[t.type]||'Task')} · added ${esc(fmt(t.created))}</dd>
     <dt>Last change</dt><dd>${esc(fmt(t.updated))}, by ${esc(t.updatedBy||'—')}</dd></dl>`;
   if(!canEdit())return`<div class="note scal">${kv}</div>`;
-  const ed=S.editing===t.id;
-  return`<div class="note scal">${kv}
+  const ed=S.editing===t.id,q=t.type!=='task';
+  const reply=t.status==='done'?'':`<form class="reply" data-reply="${esc(t.id)}"><label><span class="caps">${q?'Your answer':'Update or answer'}</span><textarea name="reply" rows="2" placeholder="${q?'Type the answer here…':'What happened? Type it here…'}" required></textarea></label>
+      <div class="acts"><button class="btn rust" type="submit" value="1">${q?'Answer &amp; close':'Done, close it'}</button><button class="btn ghost" type="submit" value="0">Add note, keep open</button><span class="msg" data-msg></span></div></form>`;
+  return`<div class="note scal">${reply}${kv}
     <div class="acts"><button class="btn" data-quick="${esc(t.id)}" data-to="${t.status==='done'?'open':'done'}">${t.status==='done'?'Reopen':'Mark done'}</button>
     <button class="btn ghost" data-edit="${esc(t.id)}">${ed?'Close editor':'Edit'}</button>
     <span><button class="btn danger" data-del="${esc(t.id)}">Delete</button></span><span class="msg" data-msg></span></div>
@@ -973,6 +980,15 @@ $('#gList').onchange=e=>{S.g.list=e.target.value;renderGuests()};
 let qT;$('#q').addEventListener('input',e=>{clearTimeout(qT);qT=setTimeout(()=>{S.f.q=e.target.value;renderTracker()},140)});
 let gT;$('#gq').addEventListener('input',e=>{clearTimeout(gT);gT=setTimeout(()=>{S.g.q=e.target.value;renderGuests()},140)});
 document.addEventListener('submit',async ev=>{
+  const rf=ev.target.closest('form[data-reply]');
+  if(rf){ev.preventDefault();const text=rf.reply.value.trim(),msg=rf.querySelector('[data-msg]');if(!text)return;
+    const close=(ev.submitter&&ev.submitter.value)==='1',t=S.tasks.find(x=>x.id===rf.dataset.reply);
+    const d=new Date(),line=`${S.me.name} · ${d.getDate()} ${MON[d.getMonth()]} ${String(d.getFullYear()).slice(2)}: ${text}`;
+    const body={id:t.id,notes:t.notes?line+'\n'+t.notes:line,_change:close?`answered: “${text.slice(0,90)}”`:`added a note: “${text.slice(0,90)}”`};
+    if(close)body.status='done';
+    rf.classList.add('busy');msg.textContent='Saving…';
+    if(await saveTask(body,close?'Answered and closed.':'Note added.')){if(close)S.openRow=null;renderTracker()}else{rf.classList.remove('busy');msg.textContent='Could not save.';msg.className='msg err'}
+    return}
   const gf=ev.target.closest('form[data-gform]');
   if(gf){ev.preventDefault();const fd=Object.fromEntries(new FormData(gf).entries()),msg=gf.querySelector('[data-msg]'),g=S.guests.find(x=>x.id===gf.dataset.gform);
     const ch=Object.keys(fd).filter(k=>String(g[k]??'')!==String(fd[k]??''));if(!ch.length){msg.textContent='Nothing changed.';return}
