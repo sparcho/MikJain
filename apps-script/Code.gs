@@ -440,6 +440,25 @@ function migrate_() {
   setMeta_('couple', 'Anna & Yash');
   const ppl = read_('People').find(function (p) { return p.id === 'p07'; });
   if (ppl && ppl.name === 'Ana') upsert_('People', { id: 'p07', name: 'Anna' });
+  // Tauji's family joins the planning (10 Oct). Rows are added with a BLANK password: no access until Sparsh types one in.
+  const acc = read_('Access');
+  [['Sanjiv', 'editor', 'Tauji'], ['Animesh', 'editor', 'Animesh'], ['Taneema', 'editor', 'Taneema']].forEach(function (a) {
+    if (!acc.some(function (r) { return r.name === a[0]; })) sh_('Access').appendRow([a[0], '', a[1], a[2]]);
+  });
+  const people = read_('People');
+  if (!people.some(function (p) { return p.name === 'Taneema'; })) {
+    upsert_('People', { id: 'p12', order: '6', name: 'Taneema', role: 'Tauji’s daughter. Attire guide feedback', side: 'Jain' });
+  }
+  const tp = people.find(function (p) { return p.id === 'p03'; });
+  if (tp && tp.role === 'Decision-maker') upsert_('People', { id: 'p03', role: 'Decision-maker. Guest logistics, with Sparsh' });
+  const tasks = read_('Tasks');
+  const t46 = tasks.find(function (t) { return t.id === 't046'; });
+  if (t46 && !t46.waitingOn) upsert_('Tasks', { id: 't046', waitingOn: 'Tauji / Sparcho' });
+  const t18 = tasks.find(function (t) { return t.id === 't018'; });
+  if (t18 && t18.status === 'done' && t18.updatedBy === 'Rajiv') {
+    upsert_('Tasks', { id: 't018', status: 'hold', next: 'Check the family group chat: is this a separate request from Galina (#17)?', updated: today_(), updatedBy: 'Claude' });
+    log_({ name: 'Claude' }, 't018', t18.title, 'put on hold: may be a different request from Galina’s (#17)');
+  }
 }
 
 /** Creates the tabs from SEED (defined in Seed.gs) if they don't exist yet. Never overwrites data. */

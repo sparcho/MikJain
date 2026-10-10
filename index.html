@@ -344,6 +344,25 @@ footer .lnk{color:var(--on-ox);margin-top:22px}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .glance{padding-top:52px}
 .gstats{padding-top:18px}
+.duo-top{padding-block:46px 0}
+.duo-top{padding-bottom:40px}
+#ovMine+.duo{padding-top:56px}
+.jr li{display:grid;grid-template-columns:78px 1fr;gap:12px;padding:11px 0;border-top:1px solid var(--line);align-items:baseline}
+.jr li:first-child{border-top:0}
+.jr li.e{display:block}
+#app{overflow-x:clip}
+.jr li.jl{cursor:pointer}.jr li.jl:hover p b{color:var(--rust)}
+.jr p{font:400 18px/1.3 var(--serif);color:var(--cocoa)}
+.jr p b{font-weight:400;color:var(--ox)}
+.jr .jti{font:13.5px/1.35 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.jt{color:var(--adobe-d)}
+.gstats2{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+.gst{background:none;border:0;border-bottom:1px solid var(--line);padding:18px 6px;text-align:left;display:flex;flex-direction:column;gap:6px}
+.gst:nth-child(odd){border-right:1px solid var(--line)}.gst:nth-child(even){padding-left:22px}
+.gst b{font:400 46px/1 var(--serif)}
+.gst:hover .caps{color:var(--rust)}
+.q{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--adobe);color:var(--adobe-d);font:600 9.5px/1 var(--sans);letter-spacing:0;margin-left:6px;vertical-align:1px;cursor:help;text-transform:none}
+.q:hover,.q:focus{background:var(--rust);color:#fff;box-shadow:none;outline:0}
 .gstats .stat b{font-size:clamp(40px,5.5vw,58px)}
 .mine{margin-top:64px;padding:30px 32px;background:var(--paper-2);box-shadow:inset 0 0 0 1px rgba(142,74,43,.35);position:relative}
 .mine h3{font:400 30px/1.1 var(--serif);color:var(--ox);margin:6px 0 10px}
@@ -621,23 +640,31 @@ button.lnkt:hover{color:var(--rust)}
       <button class="stat" data-go="soon"><b class="num" id="sSoon">—</b><span class="caps">Due in 14 days</span></button>
       <button class="stat" data-go="done"><b class="c-done num" id="sDone">—</b><span class="caps" id="sDoneL">Done</span></button>
     </div>
-    <div id="ovMine"></div>
-    <div class="glance">
-      <p class="caps" style="text-align:center">The guests</p>
-      <div class="stats gstats" id="ovGuests"></div>
+    <div class="duo duo-top">
+      <div>
+        <p class="caps">Latest activity <span class="q" tabindex="0" data-tip="Every change anyone makes in the HQ: answers, status changes, new items. Newest first.">?</span></p>
+        <h3>What’s <i>changed</i></h3>
+        <ol class="jr" id="ovJournal"></ol>
+      </div>
+      <div>
+        <p class="caps">On the calendar <span class="q" tabindex="0" data-tip="Key dates and tasks with a due date, soonest first. Red means within 14 days.">?</span></p>
+        <h3>Coming up</h3>
+        <ol class="cu" id="ovCome"></ol>
+        <p class="more"><a class="lnk" href="#dates">All dates →</a></p>
+      </div>
     </div>
+    <div id="ovMine"></div>
     <div class="duo">
       <div>
-        <p class="caps">Over to the family</p>
+        <p class="caps">Over to the family <span class="q" tabindex="0" data-tip="Questions and decisions that need someone’s answer. Click one, type the answer, press Answer &amp; close.">?</span></p>
         <h3>Needs a decision</h3>
         <ol class="dec" id="ovDec"></ol>
         <p class="more"><button class="lnk" data-go="decisions">All decisions →</button></p>
       </div>
       <div>
-        <p class="caps">On the calendar</p>
-        <h3>Coming up</h3>
-        <ol class="cu" id="ovCome"></ol>
-        <p class="more"><a class="lnk" href="#dates">All dates →</a></p>
+        <p class="caps">The guests <span class="q" tabindex="0" data-tip="From the guest list and the travel form. Click a number to open that view.">?</span></p>
+        <h3>Guests at a <i>glance</i></h3>
+        <div class="gstats2" id="ovGuests"></div>
       </div>
     </div>
   </div>
@@ -656,10 +683,6 @@ button.lnkt:hover{color:var(--rust)}
     <div class="strip" id="ovWait"></div>
   </div>
 
-  <div class="wrap journal">
-    <div class="sec-h"><p class="caps">Recent changes</p><h2>The <i>journal</i></h2><svg class="sprig"><use href="#sprig"/></svg></div>
-    <ol class="col" id="ovJournal"></ol>
-  </div>
 </section>
 
 <!-- ================= TRACKER ================= -->
@@ -828,7 +851,7 @@ function renderOverview(){
   const G=S.guests,Y=G.filter(coming),F=Y.filter(g=>g.form_at),pk=Y.filter(g=>g.pickup==='yes');
   $('#yesWords').textContent=Y.length===150?'hundred and fifty':(Y.length||S.meta.yes||'');
   $('#ovGuests').innerHTML=[[Y.length,'Coming','c-done','list'],[F.length,'Travel forms in','c-waiting','form'],[Y.length-F.length,'Not replied yet',(Y.length-F.length)?'c-open':'c-calm','form'],[pk.length,'Need a pickup','c-calm','arrivals']]
-    .map(([n,l,c,t])=>`<button class="stat" data-gtab="${t}"><b class="num ${c}">${n}</b><span class="caps">${l}</span></button>`).join('');
+    .map(([n,l,c,t])=>`<button class="gst" data-gtab="${t}"><b class="num ${c}">${n}</b><span class="caps">${l}</span></button>`).join('');
   const me=S.me?.person,mine=me?A.filter(t=>splitWho(t.waitingOn).includes(me)):[];
   $('#ovMine').innerHTML=mine.length?`<div class="mine scal" style="--scal-c:var(--paper)"><p class="caps">On your plate</p><h3>${esc(S.me.name)}, <i>${mine.length} ${mine.length===1?'thing is':'things are'} waiting on you</i></h3><ol class="dec">${mine.slice(0,6).map((t,i)=>`<li><span class="n num">${pad(i+1)}</span><div><button class="t" data-open="${esc(t.id)}">${esc(t.title)}</button><p class="meta">${sw(t.status)}${t.due?`<span class="caps ${dueBits(t.due).c}">Due ${fmt(t.due)}</span>`:''}</p></div></li>`).join('')}</ol>${mine.length>6?`<p class="more"><button class="lnk" data-who="${esc(me)}">All ${mine.length} →</button></p>`:''}</div>`:'';
   const dec=A.filter(t=>t.type==='decision'||t.type==='question').sort((a,b)=>(b.priority==='high')-(a.priority==='high')||(a.n-b.n)).slice(0,5);
@@ -841,8 +864,9 @@ function renderOverview(){
   $('#ovEnds').innerHTML=P.filter(d=>d.id==='d0'||d.id==='d3').map(d=>`<div><p class="caps">${d.id==='d0'?'The night before':'The morning after'} · ${esc(d.label)}</p><p class="i">${(d.items||[]).map(i=>esc(i.title)).join(' · ')}</p></div>`).join('');
   const ps=people();
   $('#ovWait').innerHTML=ps.length?ps.map(([p,n])=>`<button class="wn" data-who="${esc(p)}"><span class="nm">${esc(p)}</span><sup class="num">${n}</sup></button>`).join(''):`<p class="empty" style="padding:18px">Nobody is holding anything up.</p>`;
-  const act=S.activity.slice(0,7);
-  $('#ovJournal').innerHTML=act.length?act.map(a=>`<li><span class="caps">${esc(fmt(String(a.at).slice(0,10)))}</span><p><b>${esc(a.by)}</b> ${esc(a.change)} — “${esc(a.title||'')}”</p></li>`).join(''):`<li style="grid-template-columns:1fr;text-align:center"><p class="empty">Nothing yet. Every change made here is written down in the journal.</p></li>`;
+  const act=S.activity.slice(0,6);
+  const ago=at=>{const t=Date.parse(at);if(isNaN(t))return'';const m=Math.round((Date.now()-t)/6e4);return m<1?'just now':m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} h ago`:m<2880?'yesterday':fmt(String(at).slice(0,10))};
+  $('#ovJournal').innerHTML=act.length?act.map(a=>`<li${a.task_id&&S.tasks.find(t=>t.id===a.task_id)?` data-open="${esc(a.task_id)}" class="jl"`:''}><span class="jt caps">${esc(ago(a.at))}</span><div><p><b>${esc(a.by)}</b> ${esc(a.change)}</p><p class="jti">${esc(a.title||'')}</p></div></li>`).join(''):`<li class="e"><p class="empty">Nothing yet. Every change made here shows up in this list.</p></li>`;
 }
 function rail(items){return`<ol class="rail">${items.map(i=>`<li class="stop"><svg class="ic"><use href="#i-${ICON(i.title)}"/></svg><div class="tx"><p class="tm">${esc(i.time)}</p><p class="tt">${esc(i.title)}</p>${i.place&&i.place!=='TBD'?`<p class="pl">${esc(i.place)}</p>`:i.place==='TBD'?'<p class="pl">Venue to be set</p>':''}<span class="sw p-${esc(i.status)}">${PSTAT[i.status]||esc(i.status)}</span></div></li>`).join('')}</ol>`}
 
