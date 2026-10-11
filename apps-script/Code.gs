@@ -12,12 +12,41 @@
 const TOKEN_DAYS = 45;
 const TZ = 'Asia/Kolkata';
 const TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
-const FORM_TITLE = 'Anna & Yash · Jaisalmer · Your travel details';
-const FORM_DESC = '30 & 31 January 2027 · Fort Rajwada, Jaisalmer\n\nSo we can plan pickups, rooms and food, please tell us how and when you’re arriving. It takes about 3 minutes. If you’re filling this in for your partner or family too, one form for your party is enough.\n\nThank you! Anna & Yash';
-const FORM_THANKS = 'Thank you! We’ve got your details and will be in touch closer to the date. Anna & Yash';
+const FORM_TITLE = 'Anna & Yash · Jaisalmer · Guest registration';
+const FORM_DESC = 'You’re invited to the wedding of Anna & Yash at Fort Rajwada, Jaisalmer.\n\n'
+  + 'Check-in: Friday 30 January 2027, from 12 noon (welcome lunch)\n'
+  + 'Check-out: Sunday 1 February 2027, after breakfast, by 11:30 AM\n\n'
+  + 'Please fill this in once per invitation. Each invitation is for you and, if named, your partner.\n\n'
+  + 'Airport and station transfers: we’ll take you between Jaisalmer airport or railway station and the hotel on 30 January, and back on the morning of 1 February. '
+  + 'If you arrive before 30 January or leave after 1 February, please arrange your own transfers. We’re happy to share a list of trusted local drivers.\n\n'
+  + 'It takes about 2 minutes. Thank you! Anna & Yash';
+/* Private values (phone numbers, task notes) live in LOCAL, which is only in the paste file, never in this repo. */
+function local_() { return (typeof LOCAL !== 'undefined') ? LOCAL : {}; }
+function idWa_() { return local_().id_whatsapp || 'Sparsh'; }
+function formThanks_() { return 'Thank you! We’ve got your details. Please remember to WhatsApp photos of your IDs to Sparsh on ' + idWa_() + ' by 15 January. See you in Jaisalmer! Anna & Yash'; }
+const Q = {
+  name: 'Head guest name (as on passport / ID)',
+  partner: 'Partner’s name (as on passport / ID)',
+  code: 'Guest code',
+  phone: 'Phone / WhatsApp',
+  email: 'Email',
+  aDate: 'Arriving in Jaisalmer on',
+  aMode: 'Arriving by',
+  aTime: 'Arrival time (roughly)',
+  aRef: 'Arrival flight or train number',
+  dDate: 'Leaving Jaisalmer on',
+  dMode: 'Leaving by',
+  dTime: 'Departure time (roughly)',
+  dRef: 'Departure flight or train number',
+  diet: 'Meal preference',
+  dietNotes: 'Allergies or other dietary needs',
+  id: 'Photo ID for hotel check-in',
+  drivers: 'Arriving before 30 January or leaving after 1 February?',
+  notes: 'Anything else we should know?',
+};
 const TEXT_TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const TASK_FIELDS = ['area', 'title', 'type', 'waitingOn', 'next', 'due', 'status', 'priority', 'notes'];
-const GUEST_EDIT = ['rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
+const GUEST_EDIT = ['partner_id', 'id_status', 'drivers', 'rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
   'depart_date', 'depart_time', 'depart_mode', 'depart_ref', 'drop', 'extra_nights', 'room_block', 'room', 'room_with', 'diet', 'diet_notes', 'notes'];
 const PRIVATE_GUEST = ['phone', 'email'];
 
@@ -195,7 +224,7 @@ function bundle_(u) {
   const meta = meta_();
   const pub = {};
   Object.keys(meta).forEach(function (k) { if (k.indexOf('source_') !== 0 && k.indexOf('form_edit') !== 0 && k.indexOf('form_entry') !== 0) pub[k] = meta[k]; });
-  if (u.role !== 'viewer') pub.form_entry_name = meta.form_entry_name || '', pub.form_entry_code = meta.form_entry_code || '';
+  if (u.role !== 'viewer') pub.form_entry_name = meta.form_entry_name || '', pub.form_entry_code = meta.form_entry_code || '', pub.form_entry_partner = meta.form_entry_partner || '';
   const days = {};
   read_('Programme').forEach(function (r) {
     const d = days[r.day_id] || (days[r.day_id] = { id: r.day_id, order: Number(r.day_order), label: r.day_label, title: r.day_title, note: r.day_note, items: [] });
@@ -273,6 +302,14 @@ function saveGuest_(u, g) {
     body.updated = today_();
     body.updated_by = u.name;
     upsert_('Guests', body);
+    if (body.partner_id !== undefined && body.partner_id !== String(cur.partner_id || '')) {
+      if (cur.partner_id) upsert_('Guests', { id: cur.partner_id, partner_id: '' });
+      if (body.partner_id) {
+        const np = read_('Guests').find(function (x) { return x.id === body.partner_id; });
+        if (np && np.partner_id && np.partner_id !== g.id) upsert_('Guests', { id: np.partner_id, partner_id: '' });
+        upsert_('Guests', { id: body.partner_id, partner_id: g.id });
+      }
+    }
     log_(u, g.id, 'Guest: ' + cur.name, g._change || 'updated guest details');
     return body;
   } finally { lock.releaseLock(); }
@@ -280,89 +317,98 @@ function saveGuest_(u, g) {
 
 /* =========================== travel form =========================== */
 
-const FORM_MAP = {
-  'Your full name': 'name',
-  'Guest code': 'code',
-  'Phone / WhatsApp': 'phone',
-  'Email': 'email',
-  'Travelling from': 'from_city',
-  'How many people are in your party, including you?': 'party_size',
-  'Who else is in your party?': 'party_names',
-  'How are you getting to Jaisalmer?': 'arrive_mode',
-  'Arrival date in Jaisalmer': 'arrive_date',
-  'Arrival time (roughly)': 'arrive_time',
-  'Arrival flight or train number': 'arrive_ref',
-  'Would you like a pickup from the airport or station?': 'pickup',
-  'How are you leaving Jaisalmer?': 'depart_mode',
-  'Departure date': 'depart_date',
-  'Departure time (roughly)': 'depart_time',
-  'Departure flight or train number': 'depart_ref',
-  'Would you like a drop to the airport or station?': 'drop',
-  'Extra nights at Fort Rajwada': 'extra_nights',
-  'Who would you like to share a room with?': 'room_with',
-  'Food preference': 'diet',
-  'Allergies or other dietary needs': 'diet_notes',
-  'Anything else we should know?': 'notes',
-};
+const FORM_MAP = {};
+FORM_MAP[Q.name] = 'name'; FORM_MAP['Your full name'] = 'name';
+FORM_MAP[Q.partner] = 'partner_name';
+FORM_MAP[Q.code] = 'code';
+FORM_MAP[Q.phone] = 'phone';
+FORM_MAP[Q.email] = 'email';
+FORM_MAP[Q.aDate] = 'arrive_date';
+FORM_MAP[Q.aMode] = 'arrive_mode';
+FORM_MAP[Q.aTime] = 'arrive_time';
+FORM_MAP[Q.aRef] = 'arrive_ref';
+FORM_MAP[Q.dDate] = 'depart_date';
+FORM_MAP[Q.dMode] = 'depart_mode';
+FORM_MAP[Q.dTime] = 'depart_time';
+FORM_MAP[Q.dRef] = 'depart_ref';
+FORM_MAP[Q.diet] = 'diet';
+FORM_MAP[Q.dietNotes] = 'diet_notes';
+FORM_MAP[Q.id] = 'id_status';
+FORM_MAP[Q.drivers] = 'drivers';
+FORM_MAP[Q.notes] = 'notes';
+const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'id_status', 'drivers', 'form_at'];
 
 function createForm_() {
   const meta = meta_();
   if (meta.form_id) { try { FormApp.openById(meta.form_id); return meta.form_url; } catch (e) { /* recreate */ } }
   const f = FormApp.create(FORM_TITLE);
-  f.setDescription(FORM_DESC);
-  f.setCollectEmail(false).setAllowResponseEdits(true).setShowLinkToRespondAgain(false).setProgressBar(true);
-  f.setConfirmationMessage(FORM_THANKS);
-
-  f.addSectionHeaderItem().setTitle('About you');
-  f.addTextItem().setTitle('Your full name').setHelpText('As on your passport or ID').setRequired(true);
-  f.addTextItem().setTitle('Guest code').setHelpText('Filled in for you if you used your personal link. Leave it as it is, or blank.');
-  f.addTextItem().setTitle('Phone / WhatsApp').setHelpText('With country code, e.g. +44 7700 900123 or +91 98100 00000').setRequired(true);
-  f.addTextItem().setTitle('Email');
-  f.addTextItem().setTitle('Travelling from').setHelpText('City and country');
-  f.addListItem().setTitle('How many people are in your party, including you?').setChoiceValues(['1', '2', '3', '4', '5', '6 or more']).setRequired(true);
-  f.addParagraphTextItem().setTitle('Who else is in your party?').setHelpText('Names of everyone travelling with you, and ages of any children');
-
-  f.addPageBreakItem().setTitle('Arriving in Jaisalmer').setHelpText('The welcome lunch is at noon on Friday 30 January. Jaisalmer airport has a few flights a day from Delhi; there are also overnight trains.');
-  f.addMultipleChoiceItem().setTitle('How are you getting to Jaisalmer?').setChoiceValues(['Flight', 'Train', 'Car', 'Not sure yet']).setRequired(true);
-  f.addDateItem().setTitle('Arrival date in Jaisalmer').setIncludesYear(true);
-  f.addTimeItem().setTitle('Arrival time (roughly)');
-  f.addTextItem().setTitle('Arrival flight or train number').setHelpText('If you have it already. You can edit your answers later.');
-  f.addMultipleChoiceItem().setTitle('Would you like a pickup from the airport or station?').setChoiceValues(['Yes please', 'No, we’ve got it covered']);
-
-  f.addPageBreakItem().setTitle('Leaving Jaisalmer').setHelpText('Checkout is on the morning of Sunday 1 February.');
-  f.addMultipleChoiceItem().setTitle('How are you leaving Jaisalmer?').setChoiceValues(['Flight', 'Train', 'Car', 'Not sure yet']);
-  f.addDateItem().setTitle('Departure date').setIncludesYear(true);
-  f.addTimeItem().setTitle('Departure time (roughly)');
-  f.addTextItem().setTitle('Departure flight or train number');
-  f.addMultipleChoiceItem().setTitle('Would you like a drop to the airport or station?').setChoiceValues(['Yes please', 'No, we’ve got it covered']);
-
-  f.addPageBreakItem().setTitle('Stay and food');
-  f.addCheckboxItem().setTitle('Extra nights at Fort Rajwada')
-    .setHelpText('The wedding nights of 30 and 31 January are taken care of. If you’d like to arrive early or stay on, tick the nights and we’ll check availability with the hotel (₹30,000 + tax per room per night, breakfast included).')
-    .setChoiceValues(['Wed 28 Jan', 'Thu 29 Jan', 'Sun 1 Feb', 'No extra nights']);
-  f.addTextItem().setTitle('Who would you like to share a room with?');
-  f.addMultipleChoiceItem().setTitle('Food preference').setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
-  f.addTextItem().setTitle('Allergies or other dietary needs');
-  f.addParagraphTextItem().setTitle('Anything else we should know?').setHelpText('Accessibility needs, questions, anything at all');
-
+  buildForm_(f);
   f.setDestination(FormApp.DestinationType.SPREADSHEET, ss_().getId());
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'onTravelForm') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('onTravelForm').forForm(f).onFormSubmit().create();
-
-  // Entry ids for personal pre-filled links (name + guest code).
-  const ids = {};
-  f.getItems().forEach(function (it) { ids[it.getTitle()] = it.getId(); });
-  const pre = f.createResponse();
-  pre.withItemResponse(f.getItemById(ids['Your full name']).asTextItem().createResponse('__NAME__'));
-  pre.withItemResponse(f.getItemById(ids['Guest code']).asTextItem().createResponse('__CODE__'));
-  const url = pre.toPrefilledUrl();
-  const m1 = url.match(/entry\.(\d+)=__NAME__/), m2 = url.match(/entry\.(\d+)=__CODE__/);
   setMeta_('form_id', f.getId());
   setMeta_('form_url', f.getPublishedUrl());
   setMeta_('form_edit_url', f.getEditUrl());
+  formEntries_(f);
+  setMeta_('form_v', '2');
+  return f.getPublishedUrl();
+}
+
+/** One-page guest registration (Dad's questions, Tauji's wording, 11 Oct 26). Keeps the name and code
+ *  questions (renamed) so existing personal links keep working; everything else is rebuilt. */
+function buildForm_(f) {
+  f.setTitle(FORM_TITLE).setDescription(FORM_DESC).setConfirmationMessage(formThanks_());
+  f.setCollectEmail(false).setAllowResponseEdits(true).setShowLinkToRespondAgain(false).setProgressBar(false);
+  let nameIt = null, codeIt = null;
+  f.getItems().forEach(function (it) {
+    const t = it.getTitle();
+    if (!nameIt && (t === 'Your full name' || t === Q.name) && it.getType() === FormApp.ItemType.TEXT) nameIt = it;
+    else if (!codeIt && t === Q.code && it.getType() === FormApp.ItemType.TEXT) codeIt = it;
+    else f.deleteItem(it);
+  });
+  const name = nameIt ? nameIt.asTextItem() : f.addTextItem();
+  name.setTitle(Q.name).setHelpText('The person this invitation is addressed to').setRequired(true);
+  const code = codeIt ? codeIt.asTextItem() : f.addTextItem().setTitle(Q.code);
+  code.setHelpText('Filled in for you if you used your personal link. Otherwise leave it blank.').setRequired(false);
+  const partner = f.addTextItem().setTitle(Q.partner).setHelpText('Only if your invitation is for two. Leave blank if you’re coming on your own.');
+  f.moveItem(name.getIndex(), 0);
+  f.moveItem(partner.getIndex(), 1);
+  f.moveItem(code.getIndex(), 2);
+  f.addTextItem().setTitle(Q.phone).setHelpText('With country code, e.g. +44 7700 900123 or +91 98100 00000').setRequired(true);
+  f.addTextItem().setTitle(Q.email);
+  f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true);
+  f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
+  f.addTimeItem().setTitle(Q.aTime);
+  f.addTextItem().setTitle(Q.aRef).setHelpText('If you have it already. You can come back and edit your answers.');
+  f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true);
+  f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
+  f.addTimeItem().setTitle(Q.dTime);
+  f.addTextItem().setTitle(Q.dRef);
+  f.addMultipleChoiceItem().setTitle(Q.diet).setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
+  f.addTextItem().setTitle(Q.dietNotes).setHelpText('For you and your partner');
+  f.addCheckboxItem().setTitle(Q.id)
+    .setHelpText('The hotel needs a photo ID for every guest at check-in: passport and Indian visa for international guests; passport, Aadhaar or driving licence for guests from India. '
+      + 'Please WhatsApp a clear photo of your ID, and your partner’s, to Sparsh on ' + idWa_() + ' by 15 January 2027, and bring the originals with you.')
+    .setChoiceValues(['Got it. I’ll send our IDs by 15 January']).setRequired(true);
+  f.addCheckboxItem().setTitle(Q.drivers)
+    .setHelpText('Hotel transfers are only on 30 January and the morning of 1 February. Outside those dates please arrange your own; tick below and we’ll send you our list of trusted local drivers.')
+    .setChoiceValues(['Yes, please send me the list of trusted drivers']);
+  f.addParagraphTextItem().setTitle(Q.notes).setHelpText('Accessibility needs, questions, anything at all');
+}
+
+/** Saves the pre-fill entry ids (name, partner, code) used by personal links. */
+function formEntries_(f) {
+  const ids = {};
+  f.getItems().forEach(function (it) { ids[it.getTitle()] = it.getId(); });
+  const pre = f.createResponse();
+  pre.withItemResponse(f.getItemById(ids[Q.name]).asTextItem().createResponse('__NAME__'));
+  pre.withItemResponse(f.getItemById(ids[Q.partner]).asTextItem().createResponse('__PARTNER__'));
+  pre.withItemResponse(f.getItemById(ids[Q.code]).asTextItem().createResponse('__CODE__'));
+  const url = pre.toPrefilledUrl();
+  const m1 = url.match(/entry\.(\d+)=__NAME__/), m2 = url.match(/entry\.(\d+)=__CODE__/), m3 = url.match(/entry\.(\d+)=__PARTNER__/);
   if (m1) setMeta_('form_entry_name', m1[1]);
   if (m2) setMeta_('form_entry_code', m2[1]);
-  return f.getPublishedUrl();
+  if (m3) setMeta_('form_entry_partner', m3[1]);
 }
 
 /** Trigger: copies each travel-form reply onto the matching guest (by code, else by name). */
@@ -380,6 +426,12 @@ function onTravelForm(e) {
     if (a.pickup) a.pickup = /^yes/i.test(a.pickup) ? 'yes' : 'no';
     if (a.drop) a.drop = /^yes/i.test(a.drop) ? 'yes' : 'no';
     if (a.diet) a.diet = a.diet.split(' (')[0];
+    // Hotel transfers only on 30 Jan (arrivals) and 1 Feb (departures), by air or train.
+    if (a.arrive_date) a.pickup = (a.arrive_date === '2027-01-30' && a.arrive_mode !== 'Own transport') ? 'yes' : 'no';
+    if (a.depart_date) a.drop = (a.depart_date === '2027-02-01' && a.depart_mode !== 'Own transport') ? 'yes' : 'no';
+    if (a.id_status) a.id_status = 'promised';
+    if (a.drivers) a.drivers = 'send list';
+    const partnerName = a.partner_name || ''; delete a.partner_name;
     const guests = read_('Guests');
     const norm = function (s) { return String(s || '').toLowerCase().replace(/[^a-zЀ-ӿ ]/g, '').replace(/\s+/g, ' ').trim(); };
     let g = a.code ? guests.find(function (x) { return x.id === a.code; }) : null;
@@ -396,8 +448,16 @@ function onTravelForm(e) {
     body.updated_by = 'Travel form';
     if (g) {
       body.id = g.id;
+      if (partnerName && !g.partner_id) body.party_names = partnerName;
       upsert_('Guests', body);
+      if (g.partner_id) {
+        const pb = { id: g.partner_id, updated: body.updated, updated_by: 'Travel form' };
+        TRAVEL_COPY.forEach(function (k) { if (body[k] !== undefined) pb[k] = body[k]; });
+        if (body.diet && !read_('Guests').some(function (x) { return x.id === g.partner_id && x.diet; })) pb.diet = body.diet;
+        upsert_('Guests', pb);
+      }
     } else {
+      if (partnerName) body.party_names = partnerName;
       const n = guests.reduce(function (m, x) { return Math.max(m, Number(String(x.id).replace(/\D/g, '')) || 0); }, 0) + 1;
       body.id = 'g' + ('00' + n).slice(-3);
       body.name = a.name || 'Unknown';
@@ -435,7 +495,7 @@ function setup() {
 function migrate_() {
   const meta = meta_();
   if (meta.form_id) {
-    try { FormApp.openById(meta.form_id).setTitle(FORM_TITLE).setDescription(FORM_DESC).setConfirmationMessage(FORM_THANKS); } catch (e) { Logger.log('Form text: ' + e); }
+    try { FormApp.openById(meta.form_id).setTitle(FORM_TITLE).setDescription(FORM_DESC).setConfirmationMessage(formThanks_()); } catch (e) { Logger.log('Form text: ' + e); }
   }
   setMeta_('couple', 'Anna & Yash');
   const ppl = read_('People').find(function (p) { return p.id === 'p07'; });
@@ -459,6 +519,72 @@ function migrate_() {
     upsert_('Tasks', { id: 't018', status: 'hold', next: 'Check the family group chat: is this a separate request from Galina (#17)?', updated: today_(), updatedBy: 'Claude' });
     log_({ name: 'Claude' }, 't018', t18.title, 'put on hold: may be a different request from Galina’s (#17)');
   }
+
+  // ---- 11 Oct 26: one-page registration form, couples, new tracker items ----
+  const gs = sh_('Guests'), gh = headers_('Guests');
+  ['partner_id', 'id_status', 'drivers'].forEach(function (k) {
+    if (gh.indexOf(k) < 0) { gs.getRange(1, gs.getLastColumn() + 1).setValue(k).setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); gh.push(k); }
+  });
+  gs.createTextFinder('Yash & Ana').matchEntireCell(true).replaceAllWith('Yash & Anna');
+  if (meta.form_id && meta.form_v !== '2') {
+    try { const f = FormApp.openById(meta.form_id); buildForm_(f); formEntries_(f); setMeta_('form_v', '2'); } catch (e) { Logger.log('Form rebuild: ' + e); }
+  }
+  if (meta.pairs_v !== '1' && meta.source_vedding_id) {
+    try { Logger.log('Couples linked: ' + pairCouples_(meta.source_vedding_id)); setMeta_('pairs_v', '1'); } catch (e) { Logger.log('Couples: ' + e); }
+  }
+  applyLocalUpdates_();
+}
+
+/** Adds tracker items and task edits listed in LOCAL (paste file only). Skips anything already there. */
+function applyLocalUpdates_() {
+  const L = local_();
+  const T = read_('Tasks');
+  (L.newTasks || []).forEach(function (o) {
+    if (T.some(function (t) { return t.title === o.title; })) return;
+    const n = T.reduce(function (m, x) { return Math.max(m, Number(x.n) || 0); }, 0) + 1;
+    const row = Object.assign({ id: 't' + ('00' + n).slice(-3), n: String(n), type: 'task', status: 'open', priority: 'normal', created: today_(), updated: today_(), updatedBy: 'Claude' }, o);
+    upsert_('Tasks', row); T.push(row);
+    log_({ name: 'Claude' }, row.id, row.title, 'added');
+  });
+  (L.taskEdits || []).forEach(function (o) {
+    const t = T.find(function (x) { return x.id === o.id; });
+    if (!t || (o.ifNext && (t.next || '').indexOf(o.ifNext) < 0)) return;
+    const body = Object.assign({}, o.set, { id: o.id, updated: today_(), updatedBy: 'Claude' });
+    upsert_('Tasks', body);
+    log_({ name: 'Claude' }, o.id, t.title, o.log || 'updated');
+  });
+}
+
+/** Links couples marked "C" in the Vedding list (that row + the next one), matching the import order. */
+function pairCouples_(id) {
+  const v = SpreadsheetApp.openById(id).getSheetByName('final guest list').getDataRange().getValues();
+  const byId = {};
+  read_('Guests').forEach(function (g) { byId[g.id] = g; });
+  const rows = [];
+  let n = 0;
+  [0, 11, 22].forEach(function (c) {
+    for (let i = 6; i < v.length; i++) {
+      const r = v[i], name = String(r[c] || '').trim();
+      if (!name) continue;
+      const c1 = String(r[c + 1] || '').trim(), c2 = String(r[c + 2] || '').trim();
+      if (/save date sent/i.test(c1) || /^rsvp$/i.test(c2)) continue;
+      if (/total|list$/i.test(name)) continue;
+      n++;
+      rows.push({ id: 'g' + ('00' + n).slice(-3), c: c, name: name, couple: /^c$/i.test(String(r[c + 4] || '').trim()) });
+    }
+  });
+  let linked = 0;
+  rows.forEach(function (a, k) {
+    const b = rows[k + 1];
+    if (!a.couple || !b || b.c !== a.c) return;
+    const ga = byId[a.id], gb = byId[b.id];
+    if (!ga || !gb || ga.name !== a.name || gb.name !== b.name) return;
+    if (ga.partner_id || gb.partner_id || /^n/i.test(ga.rsvp || '') || /^n/i.test(gb.rsvp || '')) return;
+    upsert_('Guests', { id: ga.id, partner_id: gb.id });
+    upsert_('Guests', { id: gb.id, partner_id: ga.id });
+    linked++;
+  });
+  return linked;
 }
 
 /** Creates the tabs from SEED (defined in Seed.gs) if they don't exist yet. Never overwrites data. */
@@ -488,7 +614,7 @@ function importGuests_(id) {
   const src = SpreadsheetApp.openById(id).getSheetByName('final guest list');
   if (!src) return 0;
   const v = src.getDataRange().getValues();
-  const blocks = [{ c: 0, list: 'Yash & Ana', side: 'Yash & Ana' }, { c: 11, list: 'Sparsh', side: 'Sparsh' }, { c: 22, list: 'Rajiv & Shalini', side: 'Rajiv & Shalini' }];
+  const blocks = [{ c: 0, list: 'Yash & Anna', side: 'Yash & Anna' }, { c: 11, list: 'Sparsh', side: 'Sparsh' }, { c: 22, list: 'Rajiv & Shalini', side: 'Rajiv & Shalini' }];
   const h = headers_('Guests');
   const rows = [];
   let n = 0;
