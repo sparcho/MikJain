@@ -14,11 +14,11 @@ const TZ = 'Asia/Kolkata';
 const TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const FORM_TITLE = 'Anna & Yash · Jaisalmer · Guest registration';
 const FORM_DESC = 'You’re invited to the wedding of Anna & Yash at Fort Rajwada, Jaisalmer.\n\n'
-  + 'Check-in: Friday 30 January 2027, from 12 noon (welcome lunch)\n'
-  + 'Check-out: Sunday 1 February 2027, after breakfast, by 11:30 AM\n\n'
-  + 'Please fill this in once per invitation. Each invitation is for you and, if named, your partner.\n\n'
-  + 'Airport and station transfers: we’ll take you between Jaisalmer airport or railway station and the hotel on 30 January, and back on the morning of 1 February. '
-  + 'If you arrive before 30 January or leave after 1 February, please arrange your own transfers. We’re happy to share a list of trusted local drivers.\n\n'
+  + 'Check-in: Saturday 30 January 2027, from 12 noon (welcome lunch)\n'
+  + 'Check-out: Monday 1 February 2027, after breakfast, by 11:30 AM\n\n'
+  + 'One form per invitation, please. Your invitation is for the guests named on it only: you, and your partner if one is named.\n\n'
+  + 'Pickups and drops: we can take you between Jaisalmer airport or railway station and the hotel on Saturday 30 January (arrivals) and on the morning of Monday 1 February (departures) only. '
+  + 'If you arrive or leave on any other day, please arrange your own transfer. We’ll share a list of trusted local drivers you can book.\n\n'
   + 'It takes about 2 minutes. Thank you! Anna & Yash';
 /* Private values (phone numbers, task notes) live in LOCAL, which is only in the paste file, never in this repo. */
 function local_() { return (typeof LOCAL !== 'undefined') ? LOCAL : {}; }
@@ -26,12 +26,13 @@ function idWa_() { return local_().id_whatsapp || 'Sparsh'; }
 function formThanks_() { return 'Thank you! We’ve got your details. Please remember to WhatsApp photos of your IDs to Sparsh on ' + idWa_() + ' by 15 January. See you in Jaisalmer! Anna & Yash'; }
 const Q = {
   name: 'Head guest name (as on passport / ID)',
-  partner: 'Partner’s name (as on passport / ID)',
+  others: 'Also on your invitation (as on passport / ID)',
   code: 'Guest code',
   phone: 'Phone / WhatsApp',
   email: 'Email',
   aDate: 'Arriving in Jaisalmer on',
   aMode: 'Arriving by',
+  extra: 'Extra nights at Fort Rajwada',
   aTime: 'Arrival time (roughly)',
   aRef: 'Arrival flight or train number',
   dDate: 'Leaving Jaisalmer on',
@@ -41,12 +42,12 @@ const Q = {
   diet: 'Meal preference',
   dietNotes: 'Allergies or other dietary needs',
   id: 'Photo ID for hotel check-in',
-  drivers: 'Arriving before 30 January or leaving after 1 February?',
+  drivers: 'Arriving or leaving on another day?',
   notes: 'Anything else we should know?',
 };
 const TEXT_TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const TASK_FIELDS = ['area', 'title', 'type', 'waitingOn', 'next', 'due', 'status', 'priority', 'notes'];
-const GUEST_EDIT = ['partner_id', 'id_status', 'drivers', 'rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
+const GUEST_EDIT = ['id_status', 'drivers', 'rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
   'depart_date', 'depart_time', 'depart_mode', 'depart_ref', 'drop', 'extra_nights', 'room_block', 'room', 'room_with', 'diet', 'diet_notes', 'notes'];
 const PRIVATE_GUEST = ['phone', 'email'];
 
@@ -224,7 +225,7 @@ function bundle_(u) {
   const meta = meta_();
   const pub = {};
   Object.keys(meta).forEach(function (k) { if (k.indexOf('source_') !== 0 && k.indexOf('form_edit') !== 0 && k.indexOf('form_entry') !== 0) pub[k] = meta[k]; });
-  if (u.role !== 'viewer') pub.form_entry_name = meta.form_entry_name || '', pub.form_entry_code = meta.form_entry_code || '', pub.form_entry_partner = meta.form_entry_partner || '';
+  if (u.role !== 'viewer') pub.form_entry_name = meta.form_entry_name || '', pub.form_entry_code = meta.form_entry_code || '', pub.form_entry_others = meta.form_entry_others || '';
   const days = {};
   read_('Programme').forEach(function (r) {
     const d = days[r.day_id] || (days[r.day_id] = { id: r.day_id, order: Number(r.day_order), label: r.day_label, title: r.day_title, note: r.day_note, items: [] });
@@ -302,14 +303,6 @@ function saveGuest_(u, g) {
     body.updated = today_();
     body.updated_by = u.name;
     upsert_('Guests', body);
-    if (body.partner_id !== undefined && body.partner_id !== String(cur.partner_id || '')) {
-      if (cur.partner_id) upsert_('Guests', { id: cur.partner_id, partner_id: '' });
-      if (body.partner_id) {
-        const np = read_('Guests').find(function (x) { return x.id === body.partner_id; });
-        if (np && np.partner_id && np.partner_id !== g.id) upsert_('Guests', { id: np.partner_id, partner_id: '' });
-        upsert_('Guests', { id: body.partner_id, partner_id: g.id });
-      }
-    }
     log_(u, g.id, 'Guest: ' + cur.name, g._change || 'updated guest details');
     return body;
   } finally { lock.releaseLock(); }
@@ -319,7 +312,8 @@ function saveGuest_(u, g) {
 
 const FORM_MAP = {};
 FORM_MAP[Q.name] = 'name'; FORM_MAP['Your full name'] = 'name';
-FORM_MAP[Q.partner] = 'partner_name';
+FORM_MAP[Q.others] = 'others';
+FORM_MAP[Q.extra] = 'extra_nights';
 FORM_MAP[Q.code] = 'code';
 FORM_MAP[Q.phone] = 'phone';
 FORM_MAP[Q.email] = 'email';
@@ -336,7 +330,8 @@ FORM_MAP[Q.dietNotes] = 'diet_notes';
 FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
-const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'id_status', 'drivers', 'form_at'];
+const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'form_at'];
+const FORM_VERSION = '3';
 
 function createForm_() {
   const meta = meta_();
@@ -350,7 +345,7 @@ function createForm_() {
   setMeta_('form_url', f.getPublishedUrl());
   setMeta_('form_edit_url', f.getEditUrl());
   formEntries_(f);
-  setMeta_('form_v', '2');
+  setMeta_('form_v', FORM_VERSION);
   return f.getPublishedUrl();
 }
 
@@ -370,45 +365,52 @@ function buildForm_(f) {
   name.setTitle(Q.name).setHelpText('The person this invitation is addressed to').setRequired(true);
   const code = codeIt ? codeIt.asTextItem() : f.addTextItem().setTitle(Q.code);
   code.setHelpText('Filled in for you if you used your personal link. Otherwise leave it blank.').setRequired(false);
-  const partner = f.addTextItem().setTitle(Q.partner).setHelpText('Only if your invitation is for two. Leave blank if you’re coming on your own.');
+  const others = f.addTextItem().setTitle(Q.others).setHelpText('Filled in from your invitation if you used your personal link. Please correct spellings to match their passport or ID. Your invitation covers only the guests named on it, so please don’t add anyone else. Leave blank if the invitation is just for you.');
   f.moveItem(name.getIndex(), 0);
-  f.moveItem(partner.getIndex(), 1);
+  f.moveItem(others.getIndex(), 1);
   f.moveItem(code.getIndex(), 2);
   f.addTextItem().setTitle(Q.phone).setHelpText('With country code, e.g. +44 7700 900123 or +91 98100 00000').setRequired(true);
   f.addTextItem().setTitle(Q.email);
+  const PICK = 'We can pick you up from Jaisalmer airport or railway station on Saturday 30 January only. Arriving on another day? Please arrange your own transfer to the hotel (we’ll share trusted local drivers).';
+  const DROP = 'We can drop you at Jaisalmer airport or railway station on the morning of Monday 1 February only. Leaving on another day? Please arrange your own transfer (we’ll share trusted local drivers).';
+  f.addSectionHeaderItem().setTitle('Arriving').setHelpText(PICK);
   f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true);
   f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
   f.addTimeItem().setTitle(Q.aTime);
   f.addTextItem().setTitle(Q.aRef).setHelpText('If you have it already. You can come back and edit your answers.');
+  f.addSectionHeaderItem().setTitle('Leaving').setHelpText(DROP);
   f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true);
   f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
   f.addTimeItem().setTitle(Q.dTime);
   f.addTextItem().setTitle(Q.dRef);
+  f.addCheckboxItem().setTitle(Q.drivers)
+    .setHelpText('Outside 30 January (arrivals) and the morning of 1 February (departures), please arrange your own transfers. Tick below and we’ll send you our list of trusted local drivers.')
+    .setChoiceValues(['Yes, please send me the list of trusted drivers']);
+  const ex = f.addCheckboxItem().setTitle(Q.extra)
+    .setHelpText('Your room for the nights of 30 and 31 January is taken care of. Extra nights are ₹30,000 + taxes per room per night, breakfast included, subject to availability, booked and paid directly with the hotel (see the Travel & Stay guide). Tick the nights you’d like so we can plan with the hotel. Use “Other” for any other dates.');
+  ex.setChoices([ex.createChoice('No extra nights'), ex.createChoice('Wed 27 Jan'), ex.createChoice('Thu 28 Jan'), ex.createChoice('Fri 29 Jan'), ex.createChoice('Sun 1 Feb')]).showOtherOption(true);
   f.addMultipleChoiceItem().setTitle(Q.diet).setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
-  f.addTextItem().setTitle(Q.dietNotes).setHelpText('For you and your partner');
+  f.addTextItem().setTitle(Q.dietNotes).setHelpText('For everyone on your invitation');
   f.addCheckboxItem().setTitle(Q.id)
     .setHelpText('The hotel needs a photo ID for every guest at check-in: passport and Indian visa for international guests; passport, Aadhaar or driving licence for guests from India. '
-      + 'Please WhatsApp a clear photo of your ID, and your partner’s, to Sparsh on ' + idWa_() + ' by 15 January 2027, and bring the originals with you.')
+      + 'Please WhatsApp a clear photo of the ID of everyone on your invitation to Sparsh on ' + idWa_() + ' by 15 January 2027, and bring the originals with you.')
     .setChoiceValues(['Got it. I’ll send our IDs by 15 January']).setRequired(true);
-  f.addCheckboxItem().setTitle(Q.drivers)
-    .setHelpText('Hotel transfers are only on 30 January and the morning of 1 February. Outside those dates please arrange your own; tick below and we’ll send you our list of trusted local drivers.')
-    .setChoiceValues(['Yes, please send me the list of trusted drivers']);
   f.addParagraphTextItem().setTitle(Q.notes).setHelpText('Accessibility needs, questions, anything at all');
 }
 
-/** Saves the pre-fill entry ids (name, partner, code) used by personal links. */
+/** Saves the pre-fill entry ids (name, others on the invitation, code) used by personal links. */
 function formEntries_(f) {
   const ids = {};
   f.getItems().forEach(function (it) { ids[it.getTitle()] = it.getId(); });
   const pre = f.createResponse();
   pre.withItemResponse(f.getItemById(ids[Q.name]).asTextItem().createResponse('__NAME__'));
-  pre.withItemResponse(f.getItemById(ids[Q.partner]).asTextItem().createResponse('__PARTNER__'));
+  pre.withItemResponse(f.getItemById(ids[Q.others]).asTextItem().createResponse('__OTHERS__'));
   pre.withItemResponse(f.getItemById(ids[Q.code]).asTextItem().createResponse('__CODE__'));
   const url = pre.toPrefilledUrl();
-  const m1 = url.match(/entry\.(\d+)=__NAME__/), m2 = url.match(/entry\.(\d+)=__CODE__/), m3 = url.match(/entry\.(\d+)=__PARTNER__/);
+  const m1 = url.match(/entry\.(\d+)=__NAME__/), m2 = url.match(/entry\.(\d+)=__CODE__/), m3 = url.match(/entry\.(\d+)=__OTHERS__/);
   if (m1) setMeta_('form_entry_name', m1[1]);
   if (m2) setMeta_('form_entry_code', m2[1]);
-  if (m3) setMeta_('form_entry_partner', m3[1]);
+  if (m3) setMeta_('form_entry_others', m3[1]);
 }
 
 /** Trigger: copies each travel-form reply onto the matching guest (by code, else by name). */
@@ -431,7 +433,7 @@ function onTravelForm(e) {
     if (a.depart_date) a.drop = (a.depart_date === '2027-02-01' && a.depart_mode !== 'Own transport') ? 'yes' : 'no';
     if (a.id_status) a.id_status = 'promised';
     if (a.drivers) a.drivers = 'send list';
-    const partnerName = a.partner_name || ''; delete a.partner_name;
+    const othersTyped = a.others || ''; delete a.others;
     const guests = read_('Guests');
     const norm = function (s) { return String(s || '').toLowerCase().replace(/[^a-zЀ-ӿ ]/g, '').replace(/\s+/g, ' ').trim(); };
     let g = a.code ? guests.find(function (x) { return x.id === a.code; }) : null;
@@ -448,22 +450,33 @@ function onTravelForm(e) {
     body.updated_by = 'Travel form';
     if (g) {
       body.id = g.id;
-      if (partnerName && !g.partner_id) body.party_names = partnerName;
-      upsert_('Guests', body);
-      if (g.partner_id) {
-        const pb = { id: g.partner_id, updated: body.updated, updated_by: 'Travel form' };
-        TRAVEL_COPY.forEach(function (k) { if (body[k] !== undefined) pb[k] = body[k]; });
-        if (body.diet && !read_('Guests').some(function (x) { return x.id === g.partner_id && x.diet; })) pb.diet = body.diet;
-        upsert_('Guests', pb);
+      // The invitation (household) comes from Vedding only. Names typed in the form never add guests.
+      const hid = g.household || '';
+      const members = hid ? guests.filter(function (x) { return x.household === hid && x.id !== g.id; }) : [];
+      if (othersTyped) {
+        const known = members.map(function (m) { return norm(m.name); });
+        const extra = othersTyped.split(/,|&| and /i).map(function (x) { return x.trim(); }).filter(function (x) {
+          const nx = norm(x); return nx && !known.some(function (k) { return k && (nx.indexOf(k) >= 0 || k.indexOf(nx) >= 0 || nx.split(' ')[0] === k.split(' ')[0]); });
+        });
+        body.party_names = othersTyped;
+        if (extra.length) body.notes = ((g.notes ? g.notes + ' · ' : '') + 'Form names not on the invitation: ' + extra.join(', ') + ' (check with the family)').slice(0, 1000);
       }
+      upsert_('Guests', body);
+      members.forEach(function (m) {
+        const pb = { id: m.id, updated: body.updated, updated_by: 'Travel form' };
+        TRAVEL_COPY.forEach(function (k) { if (body[k] !== undefined) pb[k] = body[k]; });
+        if (body.diet && !m.diet) pb.diet = body.diet;
+        upsert_('Guests', pb);
+      });
     } else {
-      if (partnerName) body.party_names = partnerName;
+      // Not matched to the guest list: kept separately for the family to check, never merged into an invitation.
       const n = guests.reduce(function (m, x) { return Math.max(m, Number(String(x.id).replace(/\D/g, '')) || 0); }, 0) + 1;
       body.id = 'g' + ('00' + n).slice(-3);
       body.name = a.name || 'Unknown';
       body.list = 'From the form';
       body.group = 'Not matched yet';
       body.rsvp = 'Y';
+      if (othersTyped) body.party_names = othersTyped;
       upsert_('Guests', body);
     }
     sh_('Activity').appendRow([new Date().toISOString(), 'Travel form', body.id, 'Guest: ' + (g ? g.name : body.name), 'sent travel details']);
@@ -522,17 +535,30 @@ function migrate_() {
 
   // ---- 11 Oct 26: one-page registration form, couples, new tracker items ----
   const gs = sh_('Guests'), gh = headers_('Guests');
-  ['partner_id', 'id_status', 'drivers'].forEach(function (k) {
+  ['household', 'id_status', 'drivers'].forEach(function (k) {
     if (gh.indexOf(k) < 0) { gs.getRange(1, gs.getLastColumn() + 1).setValue(k).setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); gh.push(k); }
   });
   gs.createTextFinder('Yash & Ana').matchEntireCell(true).replaceAllWith('Yash & Anna');
-  if (meta.form_id && meta.form_v !== '2') {
-    try { const f = FormApp.openById(meta.form_id); buildForm_(f); formEntries_(f); setMeta_('form_v', '2'); } catch (e) { Logger.log('Form rebuild: ' + e); }
+  if (meta.form_id && meta.form_v !== FORM_VERSION) {
+    try { const f = FormApp.openById(meta.form_id); buildForm_(f); formEntries_(f); setMeta_('form_v', FORM_VERSION); } catch (e) { Logger.log('Form rebuild: ' + e); }
   }
-  if (meta.pairs_v !== '1' && meta.source_vedding_id) {
-    try { Logger.log('Couples linked: ' + pairCouples_(meta.source_vedding_id)); setMeta_('pairs_v', '1'); } catch (e) { Logger.log('Couples: ' + e); }
-  }
+  try { syncVedding_(); } catch (e) { Logger.log('Vedding sync: ' + e); }
+  if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncVedding'; })) ScriptApp.newTrigger('syncVedding').timeBased().everyHours(6).create();
+  fixWeekdays_();
   applyLocalUpdates_();
+}
+
+/** 30 Jan 2027 is a Saturday: earlier text said Friday. Fixes day names in every tab, once. */
+function fixWeekdays_() {
+  if (meta_().weekdays_v === '1') return;
+  const pairs = [['Thu 29 Jan', 'Fri 29 Jan'], ['Fri 30 Jan', 'Sat 30 Jan'], ['Sat 31 Jan', 'Sun 31 Jan'], ['Sun 1 Feb', 'Mon 1 Feb'],
+    ['Thursday 29 January', 'Friday 29 January'], ['Friday 30 January', 'Saturday 30 January'], ['Saturday 31 January', 'Sunday 31 January'], ['Sunday 1 February', 'Monday 1 February'],
+    ['Friday 30 & Saturday 31', 'Saturday 30 & Sunday 31']];
+  // Replace later dates first so no text is changed twice.
+  pairs.slice().reverse().forEach(function (p) {
+    ss_().getSheets().forEach(function (sh) { if (sh.getName() !== 'Access' && sh.getLastRow() > 0) sh.createTextFinder(p[0]).replaceAllWith(p[1]); });
+  });
+  setMeta_('weekdays_v', '1');
 }
 
 /** Adds tracker items and task edits listed in LOCAL (paste file only). Skips anything already there. */
@@ -555,36 +581,113 @@ function applyLocalUpdates_() {
   });
 }
 
-/** Links couples marked "C" in the Vedding list (that row + the next one), matching the import order. */
-function pairCouples_(id) {
+/** Reads the Vedding "final guest list": three side-by-side lists, a "C" mark starts a couple (that row + the next). */
+function readVedding_(id) {
   const v = SpreadsheetApp.openById(id).getSheetByName('final guest list').getDataRange().getValues();
-  const byId = {};
-  read_('Guests').forEach(function (g) { byId[g.id] = g; });
-  const rows = [];
-  let n = 0;
-  [0, 11, 22].forEach(function (c) {
+  const blocks = [{ c: 0, list: 'Yash & Anna' }, { c: 11, list: 'Sparsh' }, { c: 22, list: 'Rajiv & Shalini' }];
+  const out = [];
+  blocks.forEach(function (b) {
+    let group = '';
     for (let i = 6; i < v.length; i++) {
-      const r = v[i], name = String(r[c] || '').trim();
+      const r = v[i], name = String(r[b.c] || '').trim();
       if (!name) continue;
-      const c1 = String(r[c + 1] || '').trim(), c2 = String(r[c + 2] || '').trim();
-      if (/save date sent/i.test(c1) || /^rsvp$/i.test(c2)) continue;
+      const c1 = String(r[b.c + 1] || '').trim(), c2 = String(r[b.c + 2] || '').trim();
+      if (/save date sent/i.test(c1) || /^rsvp$/i.test(c2)) { group = name; continue; }
       if (/total|list$/i.test(name)) continue;
-      n++;
-      rows.push({ id: 'g' + ('00' + n).slice(-3), c: c, name: name, couple: /^c$/i.test(String(r[c + 4] || '').trim()) });
+      out.push({ list: b.list, group: group, name: name, rsvp: c2, sex: String(r[b.c + 3] || '').trim(), couple: /^c$/i.test(String(r[b.c + 4] || '').trim()) });
     }
   });
-  let linked = 0;
-  rows.forEach(function (a, k) {
-    const b = rows[k + 1];
-    if (!a.couple || !b || b.c !== a.c) return;
-    const ga = byId[a.id], gb = byId[b.id];
-    if (!ga || !gb || ga.name !== a.name || gb.name !== b.name) return;
-    if (ga.partner_id || gb.partner_id || /^n/i.test(ga.rsvp || '') || /^n/i.test(gb.rsvp || '')) return;
-    upsert_('Guests', { id: ga.id, partner_id: gb.id });
-    upsert_('Guests', { id: gb.id, partner_id: ga.id });
-    linked++;
+  return out;
+}
+
+/** Keeps Guests in step with Vedding (the source of truth for who is invited and who comes together):
+ *  adds new names, refreshes RSVP for rows nobody has edited in the HQ, and sets `household` (the id of the
+ *  first person on each invitation). An invitation is a "C" row plus the next row, plus any following rows that
+ *  start with the first person's name (e.g. "Irina Kid #1", "Rita +1 Irina"). Nobody else is ever added. */
+function syncVedding_() {
+  const meta = meta_();
+  if (!meta.source_vedding_id) return 'No Vedding id';
+  const V = readVedding_(meta.source_vedding_id);
+  const gs = sh_('Guests'), gh = headers_('Guests');
+  if (gh.indexOf('household') < 0) { gs.getRange(1, gs.getLastColumn() + 1).setValue('household').setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); }
+  const guests = read_('Guests');
+  const norm = function (x) { return String(x || '').toLowerCase().replace(/\s+/g, ' ').trim(); };
+  const listOf = function (l) { return l === 'Yash & Ana' ? 'Yash & Anna' : l; };
+  const used = {}, seen = {};
+  const LISTS = ['Yash & Anna', 'Sparsh', 'Rajiv & Shalini'];
+  let nextN = guests.reduce(function (m, x) { return Math.max(m, Number(String(x.id).replace(/\D/g, '')) || 0); }, 0);
+  let added = 0, renamed = 0, dropped = 0;
+  // 1. Exact name matches (the nth "Will" in a list matches the nth "Will").
+  V.forEach(function (r) {
+    const k = r.list + '|' + norm(r.name);
+    seen[k] = (seen[k] || 0) + 1;
+    let n = 0;
+    const g = guests.find(function (x) { if (listOf(x.list) !== r.list || norm(x.name) !== norm(r.name)) return false; n++; return n === seen[k]; });
+    if (g) { r.id = g.id; r.g = g; used[g.id] = true; }
   });
-  return linked;
+  // 2. Renamed rows ("Bob's partner" → "Antonia", "Rita +1" → "Rita +1 Irina"): match to a leftover row in the same list.
+  const paren = function (x) { const m = norm(x).match(/\(.*\)/); return m ? m[0] : ''; };
+  V.forEach(function (r, i) {
+    if (r.g) return;
+    const prev = V[i - 1] && V[i - 1].list === r.list ? V[i - 1] : null;
+    const prevFirst = prev ? norm(prev.name).split(' ')[0] : '';
+    const nr = norm(r.name);
+    const g = guests.find(function (x) {
+      if (used[x.id] || listOf(x.list) !== r.list) return false;
+      const nx = norm(x.name);
+      return (nx && (nr.indexOf(nx + ' ') === 0 || nx.indexOf(nr + ' ') === 0))
+        || (paren(nx) && paren(nx) === paren(nr))
+        || (prevFirst && nx === prevFirst + '\'s partner');
+    });
+    if (g) { used[g.id] = true; r.id = g.id; r.g = g; renamed++; upsert_('Guests', { id: g.id, name: r.name, updated: today_(), updated_by: 'Vedding sync' }); r.g.updated_by = 'Vedding sync'; }
+  });
+  // 3. New names.
+  V.forEach(function (r) {
+    if (r.g) return;
+    nextN++; added++;
+    r.id = 'g' + ('00' + nextN).slice(-3);
+    upsert_('Guests', { id: r.id, name: r.name, list: r.list, group: r.group, side: r.list, rsvp: r.rsvp, sex: r.sex, updated: today_(), updated_by: 'Vedding sync' });
+  });
+  // 4. Rows no longer in Vedding: marked not coming (unless they already sent the form), so counts stay right.
+  guests.forEach(function (x) {
+    if (used[x.id] || LISTS.indexOf(listOf(x.list)) < 0 || x.form_at || x.group === 'Not in Vedding') return;
+    upsert_('Guests', { id: x.id, rsvp: 'N', group: 'Not in Vedding', household: '', updated: today_(), updated_by: 'Vedding sync' });
+    dropped++;
+  });
+  // RSVP and sex follow Vedding unless someone edited that guest in the HQ.
+  V.forEach(function (r) {
+    if (!r.g) return;
+    const fromSheet = /^(import from vedding|vedding sync)$/i.test(String(r.g.updated_by || ''));
+    if (fromSheet && (String(r.g.rsvp || '') !== r.rsvp || String(r.g.sex || '') !== r.sex)) upsert_('Guests', { id: r.id, rsvp: r.rsvp, sex: r.sex, updated: today_(), updated_by: 'Vedding sync' });
+  });
+  // Invitations (households).
+  const hh = {};
+  for (let i = 0; i < V.length; i++) {
+    const r = V[i];
+    if (hh[r.id]) continue;
+    const members = [r];
+    let j = i + 1;
+    if (r.couple && V[j] && V[j].list === r.list && !hh[V[j].id]) { members.push(V[j]); j++; }
+    const pre = norm(r.name) + ' ';
+    while (V[j] && V[j].list === r.list && norm(V[j].name).indexOf(pre) === 0 && !hh[V[j].id]) { members.push(V[j]); j++; }
+    members.forEach(function (m) { hh[m.id] = members.length > 1 ? r.id : ''; });
+  }
+  const now = read_('Guests');
+  let changed = 0;
+  now.forEach(function (g) {
+    if (!(g.id in hh)) return;
+    if (String(g.household || '') !== hh[g.id]) { upsert_('Guests', { id: g.id, household: hh[g.id] }); changed++; }
+  });
+  const msg = 'Vedding sync: ' + V.length + ' names, ' + added + ' added, ' + renamed + ' renamed, ' + dropped + ' no longer listed, ' + changed + ' invitation links updated';
+  setMeta_('vedding_synced', new Date().toISOString());
+  Logger.log(msg);
+  return msg;
+}
+
+/** Runs the Vedding sync (also on a timer every 6 hours, set up by `setup`). */
+function syncVedding() {
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try { return syncVedding_(); } finally { lock.releaseLock(); }
 }
 
 /** Creates the tabs from SEED (defined in Seed.gs) if they don't exist yet. Never overwrites data. */
