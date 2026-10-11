@@ -388,7 +388,7 @@ function buildForm_(f) {
     .setChoiceValues(['Yes, please send me the list of trusted drivers']);
   const ex = f.addCheckboxItem().setTitle(Q.extra)
     .setHelpText('Your room for the nights of 30 and 31 January is taken care of. Extra nights are ₹30,000 + taxes per room per night, breakfast included, subject to availability, booked and paid directly with the hotel (see the Travel & Stay guide). Tick the nights you’d like so we can plan with the hotel. Use “Other” for any other dates.');
-  ex.setChoices([ex.createChoice('No extra nights'), ex.createChoice('Wed 27 Jan'), ex.createChoice('Thu 28 Jan'), ex.createChoice('Fri 29 Jan'), ex.createChoice('Sun 1 Feb')]).showOtherOption(true);
+  ex.setChoices([ex.createChoice('No extra nights'), ex.createChoice('Wed 27 Jan'), ex.createChoice('Thu 28 Jan'), ex.createChoice('Fri 29 Jan'), ex.createChoice('Mon 1 Feb')]).showOtherOption(true);
   f.addMultipleChoiceItem().setTitle(Q.diet).setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
   f.addTextItem().setTitle(Q.dietNotes).setHelpText('For everyone on your invitation');
   f.addCheckboxItem().setTitle(Q.id)
