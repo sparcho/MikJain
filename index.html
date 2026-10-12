@@ -631,7 +631,7 @@ button.lnkt:hover{color:var(--rust)}
           <div><b id="cdS">—</b><span class="caps">Seconds</span></div>
         </div>
       </div>
-      <p class="when">until the welcome lunch, Saturday 30 January, at noon</p>
+      <p class="when">until the welcome lunch, Saturday 30 January, at 11 am</p>
     </div>
   </section>
 
@@ -825,7 +825,7 @@ function route(){const t=(location.hash||'#overview').slice(1);const v=VIEWS.inc
 addEventListener('hashchange',()=>{route();scrollTo(0,0)});
 
 /* ---------- countdown ---------- */
-const T0=Date.parse('2027-01-30T12:00:00+05:30');
+const T0=Date.parse('2027-01-30T11:00:00+05:30');
 function tick(){let s=Math.max(0,Math.floor((T0-Date.now())/1000));const d=Math.floor(s/86400);s-=d*86400;const h=Math.floor(s/3600);s-=h*3600;const m=Math.floor(s/60);s-=m*60;
   $('#cdD').textContent=d;$('#cdH').textContent=pad(h);$('#cdM').textContent=pad(m);$('#cdS').textContent=pad(s)}
 tick();setInterval(tick,1000);
@@ -959,10 +959,10 @@ function renderTracker(){
 /* ---------- guests ---------- */
 const RS=g=>/^y/i.test(g.rsvp||'')?'<span class="sw s-done">Coming</span>':/^n/i.test(g.rsvp||'')?'<span class="sw s-hold">Not coming</span>':'<span class="sw s-open">Unsure</span>';
 const DIETS=['Vegetarian','Jain','Vegan','Non-vegetarian'];
-function personalLink(g){const m=S.meta;if(!m.form_url)return'';const o=onInvite(g).filter(x=>x.id!==g.id).map(x=>x.name),pn=o.length?`You and ${o.length>1?o.slice(0,-1).join(', ')+' and '+o[o.length-1]:o[0]}, staying together`:'Just you: arrangements are being made for you personally';let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
+function personalLink(g){const m=S.meta;if(!m.form_url)return'';const o=onInvite(g).filter(x=>x.id!==g.id).map(x=>x.name),pn=(()=>{const all=[g.name,...o],n=all.length;return n===1?`${g.name} only (1 guest)`:`${all.slice(0,-1).join(', ')} and ${all[n-1]} (${n} guests, ${n===2?'sharing a room':'staying together'})`})();let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
   if(m.form_entry_name)u+=`&entry.${m.form_entry_name}=${encodeURIComponent(g.name)}`;if(m.form_entry_others)u+=`&entry.${m.form_entry_others}=${encodeURIComponent(pn)}`;if(m.form_entry_code)u+=`&entry.${m.form_entry_code}=${encodeURIComponent(g.id)}`;return u}
-const inviteText=(g,link)=>{return`Hi ${first(g.name)}! Anna & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. Here’s your personal link to the guest registration. It already shows our arrangements for you, so it takes about 2 minutes. Please fill it in by 20 October.\n\n${link}\n\nThank you!`};
-const groupText=()=>`Hello everyone! Anna & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer.\n\nWe’ll send each of you a personal link to the guest registration on WhatsApp. It already shows our arrangements for you, so it takes about 2 minutes. Please fill it in by 20 October.\n\nThank you!`;
+const inviteText=(g,link)=>{return`Hi ${first(g.name)}! Yash & Anna’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. Here’s your personal link to the guest registration. It already shows who your invitation is for, so it takes about 2 minutes. Please fill it in by 20 October.\n\n${link}\n\nThank you!`};
+const groupText=()=>`Hello everyone! Yash & Anna’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer.\n\nWe’ll send each of you a personal link to the guest registration on WhatsApp. It already shows who your invitation is for, so it takes about 2 minutes. Please fill it in by 20 October.\n\nThank you!`;
 const waLink=(phone,text)=>{const d=String(phone||'').replace(/[^\d]/g,'');return d.length>=8?`https://wa.me/${d}?text=${encodeURIComponent(text)}`:''};
 async function copy(text,label){try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.append(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove()}toast(label||'Copied.')}
 function gFiltered(){const q=S.g.q.trim().toLowerCase();return S.guests.filter(g=>(!S.g.list||g.list===S.g.list)&&(!q||`${g.name} ${g.group} ${g.list} ${g.from_city} ${g.party_names} ${g.notes} ${g.room_block}`.toLowerCase().includes(q)))}
@@ -993,7 +993,7 @@ function guestNote(g,multi){
     ${row('Arriving',esc([fmt(g.arrive_date),g.arrive_time,g.arrive_mode,g.arrive_ref,g.pickup==='yes'?'pickup wanted':g.pickup==='no'?'no pickup':''].filter(Boolean).join(' · ')))}
     ${row('Leaving',esc([fmt(g.depart_date),g.depart_time,g.depart_mode,g.depart_ref,g.drop==='yes'?'drop wanted':g.drop==='no'?'no drop':''].filter(Boolean).join(' · ')))}
     ${row('Extra nights',esc(g.extra_nights))}${row('Room',esc([g.room_block,g.room,g.room_with&&'with '+g.room_with].filter(Boolean).join(' · ')))}
-    ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Jan':''))}${row('Drivers list',g.drivers?'Wants the list':'')}${row('Notes',esc(g.notes))}
+    ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Jan':''))}${row('Other days',g.drivers?'Arriving earlier or leaving later: send logistics partner details':'')}${row('Notes',esc(g.notes))}
     ${row('Travel form',g.form_at?esc('Received '+fmt(String(g.form_at).slice(0,10))):coming(g)?'Not yet':'')}${row('Last change',esc([fmt(g.updated),g.updated_by].filter(Boolean).join(', by ')))}</dl>`;
   if(!canEdit())return`<div class="note scal">${head}${kv}</div>`;
   const send=!isCore(g)&&coming(g),link=send?personalLink(g):'',wa=link&&waLink(g.phone,inviteText(g,link)),fn=esc(first(g.name));

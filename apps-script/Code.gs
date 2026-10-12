@@ -12,22 +12,21 @@
 const TOKEN_DAYS = 45;
 const TZ = 'Asia/Kolkata';
 const TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
-const FORM_TITLE = 'Anna & Yash · Jaisalmer · Guest registration';
-const FORM_DESC = 'You’re invited to the wedding of Anna & Yash at Fort Rajwada, Jaisalmer.\n\n'
-  + 'Check-in: Saturday 30 January 2027, from 12 noon (welcome lunch)\n'
-  + 'Check-out: Monday 1 February 2027, after breakfast, by 11:30 AM\n\n'
-  + 'Please use the personal link we sent you. It already shows who is on your invitation and sharing your room, so there is nothing to work out: one form per invitation, filled in once.\n\n'
-  + 'Pickups and drops: we can take you between Jaisalmer airport or railway station and the hotel on Saturday 30 January (arrivals) and on the morning of Monday 1 February (departures) only. '
-  + 'If you arrive or leave on any other day, please arrange your own transfer. We’ll share a list of trusted local drivers you can book.\n\n'
-  + 'It takes about 2 minutes. Thank you! Anna & Yash';
+const FORM_TITLE = 'Yash & Anna · Jaisalmer · Guest registration';
+const FORM_DESC = 'You’re invited to the wedding of Yash & Anna at Fort Rajwada, Jaisalmer.\n\n'
+  + 'Check-in: Saturday 30 January 2027, from 11 am (welcome lunch)\n'
+  + 'Check-out: Monday 1 February 2027, after breakfast (time to be confirmed)\n\n'
+  + 'Please use the personal link we sent you: it already shows who your invitation is for. One form per invitation, about 2 minutes.\n\n'
+  + 'Thank you! Yash & Anna';
 /* Private values (phone numbers, task notes) live in LOCAL, which is only in the paste file, never in this repo. */
 function local_() { return (typeof LOCAL !== 'undefined') ? LOCAL : {}; }
 function idWa_() { return local_().id_whatsapp || 'Sparsh'; }
-function formThanks_() { return 'Thank you! We’ve got your details. Please remember to WhatsApp photos of your IDs to Sparsh on ' + idWa_() + ' by 15 January. See you in Jaisalmer! Anna & Yash'; }
+function formThanks_() { return 'Thank you! We’ve got your details. Please remember to WhatsApp photos of your IDs to Sparsh on ' + idWa_() + ' by 15 January. See you in Jaisalmer! Yash & Anna'; }
 const Q = {
   name: 'Your name',
-  others: 'Our arrangements for you',
-  confirm: 'Is this right?',
+  others: 'Who this invitation is for',
+  confirm: 'Is this correct?',
+  when: 'Are you arriving on Saturday 30 January and leaving on Monday 1 February?',
   code: 'Invitation code',
   idnames: 'Full names as on passport / ID',
   phone: 'Phone / WhatsApp',
@@ -315,7 +314,8 @@ function saveGuest_(u, g) {
 const FORM_MAP = {};
 FORM_MAP[Q.name] = 'name'; FORM_MAP['Your full name'] = 'name';
 FORM_MAP[Q.others] = 'others'; FORM_MAP['Also on your invitation, sharing your room'] = 'others';
-FORM_MAP[Q.confirm] = 'arrangement';
+FORM_MAP[Q.confirm] = 'arrangement'; FORM_MAP['Is this right?'] = 'arrangement'; FORM_MAP['Our arrangements for you'] = 'others';
+FORM_MAP[Q.when] = 'other_days';
 FORM_MAP[Q.extra] = 'extra_nights';
 FORM_MAP[Q.code] = 'code'; FORM_MAP['Guest code'] = 'code'; FORM_MAP['Head guest name (as on passport / ID)'] = 'name';
 FORM_MAP[Q.idnames] = 'id_names';
@@ -335,7 +335,7 @@ FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
 const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'arrangement', 'form_at'];
-const FORM_VERSION = '5';
+const FORM_VERSION = '6';
 
 function createForm_() {
   const meta = meta_();
@@ -371,9 +371,9 @@ function buildForm_(f) {
   const code = codeIt ? codeIt.asTextItem() : f.addTextItem();
   code.setTitle(Q.code).setHelpText('Filled in by your personal link. Please don’t change it: it tells us who is on your invitation.').setRequired(true)
     .setValidation(FormApp.createTextValidation().setHelpText('Please open the form from the personal link we sent you.').requireTextMatchesPattern('^g[0-9]{3}$').build());
-  const others = f.addTextItem().setTitle(Q.others).setHelpText('Filled in by your personal link, from the family’s plan for your stay. Please don’t edit it: just tell us below whether it’s right.');
+  const others = f.addTextItem().setTitle(Q.others).setHelpText('Filled in from our guest list. Please don’t edit it; just confirm below.');
   const confirm = f.addMultipleChoiceItem().setTitle(Q.confirm).setRequired(true)
-    .setChoiceValues(['Yes, that’s right', 'No, something’s not right (we’ll be in touch)']);
+    .setChoiceValues(['Yes, that’s correct', 'No, please get in touch with me']);
   const idn = f.addParagraphTextItem().setTitle(Q.idnames).setHelpText('For the hotel. One line per person on your invitation, spelt exactly as on their passport or ID.').setRequired(true);
   f.moveItem(name.getIndex(), 0);
   f.moveItem(others.getIndex(), 1);
@@ -382,24 +382,19 @@ function buildForm_(f) {
   f.moveItem(idn.getIndex(), 4);
   f.addTextItem().setTitle(Q.phone).setHelpText('With country code, e.g. +44 7700 900123 or +91 98100 00000').setRequired(true);
   f.addTextItem().setTitle(Q.email);
-  const PICK = 'We can pick you up from Jaisalmer airport or railway station on Saturday 30 January only. Arriving on another day? Please arrange your own transfer to the hotel (we’ll share trusted local drivers).';
-  const DROP = 'We can drop you at Jaisalmer airport or railway station on the morning of Monday 1 February only. Leaving on another day? Please arrange your own transfer (we’ll share trusted local drivers).';
-  f.addSectionHeaderItem().setTitle('Arriving').setHelpText(PICK);
+  f.addSectionHeaderItem().setTitle('Your travel')
+    .setHelpText('We pick guests up from Jaisalmer airport or railway station on Saturday 30 January, and drop them back on the morning of Monday 1 February.');
+  f.addMultipleChoiceItem().setTitle(Q.when).setRequired(true)
+    .setHelpText('If you’re arriving earlier or leaving later, we’ll share the details of our logistics partner, who can help with your transfers on those days.')
+    .setChoiceValues(['Yes', 'No, I’m arriving earlier or leaving later']);
   f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true);
   f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
   f.addTimeItem().setTitle(Q.aTime);
   f.addTextItem().setTitle(Q.aRef).setHelpText('If you have it already. You can come back and edit your answers.');
-  f.addSectionHeaderItem().setTitle('Leaving').setHelpText(DROP);
   f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true);
   f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
   f.addTimeItem().setTitle(Q.dTime);
   f.addTextItem().setTitle(Q.dRef);
-  f.addCheckboxItem().setTitle(Q.drivers)
-    .setHelpText('Outside 30 January (arrivals) and the morning of 1 February (departures), please arrange your own transfers. Tick below and we’ll send you our list of trusted local drivers.')
-    .setChoiceValues(['Yes, please send me the list of trusted drivers']);
-  const ex = f.addCheckboxItem().setTitle(Q.extra)
-    .setHelpText('Your room for the nights of 30 and 31 January is taken care of. Extra nights are ₹30,000 + taxes per room per night, breakfast included, subject to availability, booked and paid directly with the hotel (see the Travel & Stay guide). Tick the nights you’d like so we can plan with the hotel. Use “Other” for any other dates.');
-  ex.setChoices([ex.createChoice('No extra nights'), ex.createChoice('Wed 27 Jan'), ex.createChoice('Thu 28 Jan'), ex.createChoice('Fri 29 Jan'), ex.createChoice('Mon 1 Feb')]).showOtherOption(true);
   f.addMultipleChoiceItem().setTitle(Q.diet).setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
   f.addTextItem().setTitle(Q.dietNotes).setHelpText('For everyone on your invitation');
   f.addCheckboxItem().setTitle(Q.id)
@@ -444,6 +439,7 @@ function onTravelForm(e) {
     if (a.depart_date) a.drop = (a.depart_date === '2027-02-01' && a.depart_mode !== 'Own transport') ? 'yes' : 'no';
     if (a.id_status) a.id_status = 'promised';
     if (a.drivers) a.drivers = 'send list';
+    if (a.other_days) { if (/^no/i.test(a.other_days)) a.drivers = 'logistics support'; delete a.other_days; }
     if (a.arrangement) a.arrangement = /^yes/i.test(a.arrangement) ? 'confirmed' : 'not right';
     let othersTyped = a.others || ''; delete a.others;
     if (/^just you\.?$/i.test(othersTyped.trim())) othersTyped = '';
