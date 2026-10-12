@@ -567,6 +567,7 @@ function applyLocalUpdates_() {
   (L.taskEdits || []).forEach(function (o) {
     const t = T.find(function (x) { return x.id === o.id; });
     if (!t || (o.ifNext && (t.next || '').indexOf(o.ifNext) < 0)) return;
+    if (Object.keys(o.set).every(function (k) { return String(t[k] || '') === String(o.set[k]); })) return;
     const body = Object.assign({}, o.set, { id: o.id, updated: today_(), updatedBy: 'Claude' });
     upsert_('Tasks', body);
     log_({ name: 'Claude' }, o.id, t.title, o.log || 'updated');
