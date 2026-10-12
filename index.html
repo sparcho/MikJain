@@ -810,7 +810,11 @@ async function api(action,body={}){
   return j;
 }
 function load(d){Object.assign(S,{me:d.me,tasks:d.tasks||[],activity:d.activity||[],programme:d.programme||[],dates:d.dates||[],docs:d.docs||[],people:d.people||[],meta:d.meta||{},guests:(d.guests||[]).filter(g=>g.group!=='Not in Vedding'),rooms:d.rooms||[],blocks:d.blocks||[],runsheet:d.runsheet||[]});renderAll()}
-async function refresh(quiet){try{const j=await api('data');load(j.data)}catch(e){if(e.code===401)signOut('Your session ended. Please sign in again.');else if(!quiet)toast(e.message)}}
+// Background refreshes wait while someone is typing, so drafts are never wiped.
+function busy(){const a=document.activeElement;if(a&&a.closest&&a.closest('#app')&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.id!=='q'&&a.id!=='gq')return true;
+  if(S.editing||S.adding)return true;
+  return [...document.querySelectorAll('#app textarea,#app input:not([type=checkbox]):not([type=radio]):not([type=hidden])')].some(e=>e.id!=='q'&&e.id!=='gq'&&e.value!==e.defaultValue)}
+async function refresh(quiet){if(quiet&&busy())return;try{const j=await api('data');if(quiet&&busy())return;load(j.data)}catch(e){if(e.code===401)signOut('Your session ended. Please sign in again.');else if(!quiet)toast(e.message)}}
 function showApp(on){$('#gate').hidden=on;$('#app').hidden=!on;if(on)route()}
 function signOut(msg){if(S.token)api('logout').catch(()=>{});S.token=null;store.set('hq-token',null);showApp(false);$('#pw').value='';const m=$('#loginMsg');m.textContent=msg||'Signed out.';m.className='gmsg'}
 $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const b=$('#loginBtn'),m=$('#loginMsg');b.disabled=true;m.textContent='Checking…';m.className='gmsg';
