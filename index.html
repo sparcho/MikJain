@@ -744,14 +744,13 @@ button.lnkt:hover{color:var(--rust)}
 
 <!-- ================= DOCUMENTS ================= -->
 <section data-view="documents" hidden>
-  <div class="wrap pg-h"><p class="caps">Everything received</p><h1>Documents <i>&amp;</i> people</h1><p>Filed in the TRAVEL AGENT project folder.</p></div>
+  <div class="wrap pg-h"><p class="caps">Everything received</p><h1>The <i>documents</i></h1><p>Filed in the TRAVEL AGENT project folder.</p></div>
   <div class="wrap">
     <div class="sec-h"><p class="caps">Sent to guests</p><h2>For our <i>guests</i></h2><svg class="sprig"><use href="#sprig"/></svg></div>
     <div class="docs" id="docsGuest"></div>
     <div class="sec-h" style="margin-top:50px"><p class="caps">Family and planning only</p><h2>Behind the <i>scenes</i></h2><svg class="sprig"><use href="#sprig"/></svg></div>
     <div class="docs" id="docs"></div>
-    <div class="sec-h" style="margin-top:50px"><p class="caps">Who's who</p><h2>The <i>people</i></h2><svg class="sprig"><use href="#sprig"/></svg></div>
-    <div class="people" id="people"></div>
+
   </div>
 </section>
 </main>
@@ -1178,8 +1177,6 @@ function renderDocs(){
   const G=D.filter(forGuests),I=D.filter(d=>!forGuests(d));
   $('#docsGuest').innerHTML=G.length?G.map(card).join(''):'<p class="empty">Nothing yet.</p>';
   $('#docs').innerHTML=I.map(card).join('');
-  const P=[...S.people].sort((a,b)=>a.order-b.order);
-  $('#people').innerHTML=P.map(p=>`<div class="person"><b>${esc(p.name)}</b><span class="caps">${esc(p.side||'')}</span><p>${esc(p.role)}</p></div>`).join('');
 }
 function renderMe(){const b=$('#me');if(!S.me){b.innerHTML='';return}b.innerHTML=`<span class="nm">${esc(S.me.name)}</span><span class="caps">${S.me.role==='admin'?'Admin':S.me.role==='editor'?'Editor':'View only'}</span>`}
 function renderAll(){renderMe();renderOverview();renderTracker();renderGuests();renderProgramme();renderDates();renderDocs()}
