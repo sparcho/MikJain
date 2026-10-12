@@ -14,20 +14,22 @@ const TZ = 'Asia/Kolkata';
 const TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const FORM_TITLE = 'Yash & Anna · Jaisalmer · Guest registration';
 const FORM_DESC = 'You’re invited to the wedding of Yash & Anna at Fort Rajwada, Jaisalmer.\n\n'
-  + 'Check-in: Saturday 30 January 2027, from 11 am (welcome lunch)\n'
+  + 'Check-in: Saturday 30 January 2027, from 11 am\n'
   + 'Check-out: Monday 1 February 2027, after breakfast (time to be confirmed)\n\n'
   + 'Everyone on our guest list gets their own personal link. Please fill in this form just for yourself; it takes about 2 minutes.\n\n'
   + 'Thank you! Yash & Anna';
 /* Private values (phone numbers, task notes) live in LOCAL, which is only in the paste file, never in this repo. */
 function local_() { return (typeof LOCAL !== 'undefined') ? LOCAL : {}; }
 function idWa_() { return local_().id_whatsapp || 'Sparsh'; }
-function formThanks_() { return 'Thank you! We’ve got your details. Please remember to WhatsApp a photo of your ID to Sparsh on ' + idWa_() + ' by 15 November. See you in Jaisalmer! Yash & Anna'; }
+function idEmail_() { return local_().id_email || ''; }
+function idSend_() { return 'WhatsApp it to Sparsh on ' + idWa_() + (idEmail_() ? ' or email it to ' + idEmail_() : ''); }
+function formThanks_() { return 'Thank you! We’ve got your details. Please remember to send a photo of your ID by 15 November: ' + idSend_() + '. See you in Jaisalmer! Yash & Anna'; }
 const Q = {
   name: 'Your name',
   others: 'Who this invitation is for',
   confirm: 'Is this correct?',
   when: 'Are you arriving on Saturday 30 January and leaving on Monday 1 February?',
-  code: 'Invitation code',
+  code: 'Guest reference',
   idnames: 'Your full name (as on passport / ID)',
   phone: 'Phone / WhatsApp',
   email: 'Email',
@@ -317,7 +319,7 @@ FORM_MAP[Q.others] = 'others'; FORM_MAP['Also on your invitation, sharing your r
 FORM_MAP[Q.confirm] = 'arrangement'; FORM_MAP['Is this right?'] = 'arrangement'; FORM_MAP['Our arrangements for you'] = 'others';
 FORM_MAP[Q.when] = 'other_days';
 FORM_MAP[Q.extra] = 'extra_nights';
-FORM_MAP[Q.code] = 'code'; FORM_MAP['Guest code'] = 'code'; FORM_MAP['Head guest name (as on passport / ID)'] = 'name';
+FORM_MAP[Q.code] = 'code'; FORM_MAP['Guest code'] = 'code'; FORM_MAP['Invitation code'] = 'code'; FORM_MAP['Head guest name (as on passport / ID)'] = 'name';
 FORM_MAP[Q.idnames] = 'id_names'; FORM_MAP['Full names as on passport / ID'] = 'id_names';
 FORM_MAP[Q.phone] = 'phone';
 FORM_MAP[Q.email] = 'email';
@@ -335,7 +337,7 @@ FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
 const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'arrangement', 'form_at'];
-const FORM_VERSION = '8';
+const FORM_VERSION = '9';
 
 function createForm_() {
   const meta = meta_();
@@ -358,45 +360,40 @@ function createForm_() {
 function buildForm_(f) {
   f.setTitle(FORM_TITLE).setDescription(FORM_DESC).setConfirmationMessage(formThanks_());
   f.setCollectEmail(false).setAllowResponseEdits(true).setShowLinkToRespondAgain(false).setProgressBar(false);
-  let nameIt = null, codeIt = null;
-  const NAME_TITLES = ['Your full name', 'Head guest name (as on passport / ID)', Q.name], CODE_TITLES = ['Guest code', Q.code];
+  // Name is asked once (as on the ID). The guest reference, filled in by the personal link, sits at the end; it is how a reply finds its guest.
+  let codeIt = null;
+  const CODE_TITLES = ['Guest code', 'Invitation code', Q.code];
   f.getItems().forEach(function (it) {
-    const t = it.getTitle();
-    if (!nameIt && NAME_TITLES.indexOf(t) >= 0 && it.getType() === FormApp.ItemType.TEXT) nameIt = it;
-    else if (!codeIt && CODE_TITLES.indexOf(t) >= 0 && it.getType() === FormApp.ItemType.TEXT) codeIt = it;
+    if (!codeIt && CODE_TITLES.indexOf(it.getTitle()) >= 0 && it.getType() === FormApp.ItemType.TEXT) codeIt = it;
     else f.deleteItem(it);
   });
-  const name = nameIt ? nameIt.asTextItem() : f.addTextItem();
-  name.setTitle(Q.name).setHelpText('Filled in by your personal link.').setRequired(true);
-  const code = codeIt ? codeIt.asTextItem() : f.addTextItem();
-  code.setTitle(Q.code).setHelpText('Filled in by your personal link. Please don’t change it: it tells us who is on your invitation.').setRequired(true)
-    .setValidation(FormApp.createTextValidation().setHelpText('Please open the form from the personal link we sent you.').requireTextMatchesPattern('^g[0-9]{3}$').build());
-  code.setHelpText('Filled in by your personal link. Please don’t change it.');
-  const idn = f.addTextItem().setTitle(Q.idnames).setHelpText('For the hotel, spelt exactly as on your passport or ID.').setRequired(true);
-  f.moveItem(name.getIndex(), 0);
-  f.moveItem(code.getIndex(), 1);
-  f.moveItem(idn.getIndex(), 2);
+  f.addTextItem().setTitle(Q.idnames).setHelpText('e.g. Priya Sharma, spelt exactly as on your passport or ID').setRequired(true);
   f.addTextItem().setTitle(Q.phone).setHelpText('With country code, e.g. +44 7700 900123 or +91 98100 00000').setRequired(true);
-  f.addTextItem().setTitle(Q.email);
+  f.addTextItem().setTitle(Q.email).setHelpText('e.g. priya@example.com');
   f.addSectionHeaderItem().setTitle('Your travel')
-    .setHelpText('We pick guests up from Jaisalmer airport or railway station on Saturday 30 January, and drop them back on the morning of Monday 1 February.');
+    .setHelpText('Airport and station transfers: pickups on Sat 30 Jan, drops on the morning of Mon 1 Feb.');
   f.addMultipleChoiceItem().setTitle(Q.when).setRequired(true)
-    .setHelpText('Arriving earlier or leaving later is no problem. We’re happy to share a few local cab contacts you can book directly for those days.')
+    .setHelpText('Other days: no problem. We’ll share a few local cab contacts you can book directly.')
     .setChoiceValues(['Yes', 'No, I’m arriving earlier or leaving later']);
   f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true);
   f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
   f.addTimeItem().setTitle(Q.aTime);
-  f.addTextItem().setTitle(Q.aRef).setHelpText('If you have it already. You can come back and edit your answers.');
+  f.addTextItem().setTitle(Q.aRef).setHelpText('e.g. 6E 2297 or train 12468. Not booked yet? Leave it blank and edit your answers later.');
   f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true);
   f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
   f.addTimeItem().setTitle(Q.dTime);
-  f.addTextItem().setTitle(Q.dRef);
+  f.addTextItem().setTitle(Q.dRef).setHelpText('e.g. 6E 2298');
   f.addMultipleChoiceItem().setTitle(Q.diet).setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
   f.addCheckboxItem().setTitle(Q.id)
-    .setHelpText('The hotel needs a photo ID for every guest at check-in: passport and Indian visa for international guests; passport, Aadhaar or driving licence for guests from India. '
-      + 'Please WhatsApp a clear photo of your ID to Sparsh on ' + idWa_() + ' by 15 November 2026, and bring the original with you.')
+    .setHelpText('The hotel needs a photo ID for every guest: passport and Indian visa from abroad; passport, Aadhaar or driving licence from India. '
+      + 'Please send a clear photo by 15 November 2026 (' + idSend_() + ') and bring the original with you.')
     .setChoiceValues(['Got it. I’ll send my ID by 15 November']).setRequired(true);
-  f.addParagraphTextItem().setTitle(Q.notes).setHelpText('Accessibility needs, questions, anything at all');
+  f.addParagraphTextItem().setTitle(Q.notes).setHelpText('e.g. accessibility needs or questions');
+  f.addSectionHeaderItem().setTitle('For our records');
+  const code = codeIt ? codeIt.asTextItem() : f.addTextItem();
+  code.setTitle(Q.code).setHelpText('Filled in by your personal link. Please leave it as it is.').setRequired(true)
+    .setValidation(FormApp.createTextValidation().setHelpText('Please open the form from the personal link we sent you.').requireTextMatchesPattern('^g[0-9]{3}$').build());
+  f.moveItem(code.getIndex(), f.getItems().length - 1);
 }
 
 /** Saves the pre-fill entry ids (name, others on the invitation, code) used by personal links. */
@@ -404,11 +401,10 @@ function formEntries_(f) {
   const ids = {};
   f.getItems().forEach(function (it) { ids[it.getTitle()] = it.getId(); });
   const pre = f.createResponse();
-  pre.withItemResponse(f.getItemById(ids[Q.name]).asTextItem().createResponse('__NAME__'));
   pre.withItemResponse(f.getItemById(ids[Q.code]).asTextItem().createResponse('__CODE__'));
   const url = pre.toPrefilledUrl();
   const m1 = url.match(/entry\.(\d+)=__NAME__/), m2 = url.match(/entry\.(\d+)=__CODE__/), m3 = url.match(/entry\.(\d+)=__OTHERS__/);
-  if (m1) setMeta_('form_entry_name', m1[1]);
+  setMeta_('form_entry_name', m1 ? m1[1] : '');
   if (m2) setMeta_('form_entry_code', m2[1]);
   setMeta_('form_entry_others', '');
 }
@@ -435,6 +431,7 @@ function onTravelForm(e) {
     if (a.drivers) a.drivers = 'send list';
     if (a.other_days) { if (/^no/i.test(a.other_days)) a.drivers = 'cab contacts'; delete a.other_days; }
     if (a.arrangement) a.arrangement = /^yes/i.test(a.arrangement) ? 'confirmed' : 'not right';
+    if (!a.name && a.id_names) a.name = a.id_names;
     let othersTyped = a.others || ''; delete a.others;
     if (/^just you\.?$/i.test(othersTyped.trim())) othersTyped = '';
     const guests = read_('Guests');
