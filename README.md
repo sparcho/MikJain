@@ -1,6 +1,6 @@
 # MikJain Wedding HQ
 
-Private planning dashboard for Ana & Yash's wedding (Fort Rajwada, Jaisalmer, 30–31 Jan 2027).
+Private planning dashboard for Yash & Anna's wedding (Fort Rajwada, Jaisalmer, 30–31 Jan 2027).
 
 - `index.html`: the site (GitHub Pages). It holds no data; everything loads after sign-in.
 - `config.js`: the URL of the Google Apps Script web app that serves the data.

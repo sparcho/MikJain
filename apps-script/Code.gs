@@ -501,7 +501,8 @@ function migrate_() {
   if (meta.form_id) {
     try { FormApp.openById(meta.form_id).setTitle(FORM_TITLE).setDescription(FORM_DESC).setConfirmationMessage(formThanks_()); } catch (e) { Logger.log('Form text: ' + e); }
   }
-  setMeta_('couple', 'Anna & Yash');
+  setMeta_('couple', 'Yash & Anna');
+  fixCoupleOrder_();
   const ppl = read_('People').find(function (p) { return p.id === 'p07'; });
   if (ppl && ppl.name === 'Ana') upsert_('People', { id: 'p07', name: 'Anna' });
   // Tauji's family joins the planning (10 Oct). Rows are added with a BLANK password: no access until Sparsh types one in.
@@ -537,6 +538,18 @@ function migrate_() {
   if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncVedding'; })) ScriptApp.newTrigger('syncVedding').timeBased().everyHours(6).create();
   fixWeekdays_();
   applyLocalUpdates_();
+}
+
+/** Always Yash first: "Anna & Yash" becomes "Yash & Anna" in every tab, once. */
+function fixCoupleOrder_() {
+  if (meta_().couple_v === '1') return;
+  [[/Ann?a\s*&\s*Yash/g, 'Yash & Anna'], [/Ann?a and Yash/g, 'Yash and Anna'], [/Ann?a, Yash/g, 'Yash, Anna'], [/Yash & Ana\b/g, 'Yash & Anna'], [/Yash and Ana\b/g, 'Yash and Anna']].forEach(function (p) {
+    ss_().getSheets().forEach(function (sh) {
+      if (sh.getName() === 'Access' || sh.getLastRow() < 1) return;
+      sh.createTextFinder(p[0].source).useRegularExpression(true).replaceAllWith(p[1]);
+    });
+  });
+  setMeta_('couple_v', '1');
 }
 
 /** 30 Jan 2027 is a Saturday: earlier text said Friday. Fixes day names in every tab, once. */
