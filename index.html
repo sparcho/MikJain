@@ -961,8 +961,8 @@ const RS=g=>/^y/i.test(g.rsvp||'')?'<span class="sw s-done">Coming</span>':/^n/i
 const DIETS=['Vegetarian','Jain','Vegan','Non-vegetarian'];
 function personalLink(g){const m=S.meta;if(!m.form_url)return'';const o=onInvite(g).filter(x=>x.id!==g.id).map(x=>x.name),pn=(()=>{const all=[g.name,...o],n=all.length;return n===1?`${g.name} only (1 guest)`:`${all.slice(0,-1).join(', ')} and ${all[n-1]} (${n} guests, ${n===2?'sharing a room':'staying together'})`})();let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
   if(m.form_entry_name)u+=`&entry.${m.form_entry_name}=${encodeURIComponent(g.name)}`;if(m.form_entry_others)u+=`&entry.${m.form_entry_others}=${encodeURIComponent(pn)}`;if(m.form_entry_code)u+=`&entry.${m.form_entry_code}=${encodeURIComponent(g.id)}`;return u}
-const inviteText=(g,link)=>{return`Hi ${first(g.name)}! Yash & Anna’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. Here’s your personal link to the guest registration. It already shows who your invitation is for, so it takes about 2 minutes. Please fill it in by 20 October.\n\n${link}\n\nThank you!`};
-const groupText=()=>`Hello everyone! Yash & Anna’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer.\n\nWe’ll send each of you a personal link to the guest registration on WhatsApp. It already shows who your invitation is for, so it takes about 2 minutes. Please fill it in by 20 October.\n\nThank you!`;
+const inviteText=(g,link)=>{return`Hi ${first(g.name)}! Yash & Anna’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. Here’s your own personal link to the guest registration (just for you; it takes about 2 minutes). Please fill it in by 20 October.\n\n${link}\n\nThank you!`};
+const groupText=()=>`Hello everyone! Yash & Anna’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer.\n\nWe’ll send each of you a personal link to the guest registration on WhatsApp. Everyone fills in their own, and it takes about 2 minutes. Please fill it in by 20 October.\n\nThank you!`;
 const waLink=(phone,text)=>{const d=String(phone||'').replace(/[^\d]/g,'');return d.length>=8?`https://wa.me/${d}?text=${encodeURIComponent(text)}`:''};
 async function copy(text,label){try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.append(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove()}toast(label||'Copied.')}
 function gFiltered(){const q=S.g.q.trim().toLowerCase();return S.guests.filter(g=>(!S.g.list||g.list===S.g.list)&&(!q||`${g.name} ${g.group} ${g.list} ${g.from_city} ${g.party_names} ${g.notes} ${g.room_block}`.toLowerCase().includes(q)))}
@@ -976,7 +976,7 @@ function unitRow(u){
   const h=u[0],open=S.gRow===h.id,c=u.filter(coming),a=c.find(x=>x.arrive_date)||h;
   const arr=a.arrive_date?`${fmtShort(a.arrive_date)}${a.arrive_time?' · '+esc(a.arrive_time):''}<em>${esc(a.arrive_mode||'')}${a.arrive_ref?' '+esc(a.arrive_ref):''}</em>`:'<span class="dt nd" style="font-size:15px">—</span>';
   const rs=u.length===1||new Set(u.map(x=>RS(x))).size===1?RS(h):`<span class="sw s-open">${c.length} of ${u.length} coming</span>`;
-  const fs=u.some(isCore)?'<span class="sw s-waiting">Family</span>':c.length?(u.some(x=>x.form_at)?'<span class="sw s-done">Form in</span>':'<span class="sw s-open">No reply</span>'):'';
+  const fin=c.filter(x=>x.form_at).length,fs=u.some(isCore)?'<span class="sw s-waiting">Family</span>':c.length?(fin===c.length?`<span class="sw s-done">${c.length>1?'Forms':'Form'} in</span>`:fin?`<span class="sw s-open">${fin} of ${c.length} forms in</span>`:'<span class="sw s-open">No reply</span>'):'';
   return`<div class="item grow${open?' open':''}${!c.length?' no':''}" id="g-${esc(h.id)}"><button class="ln" data-grow="${esc(h.id)}" aria-expanded="${open}">
     <span class="nm">${unitName(u)}</span><span class="rs">${rs}</span><span class="ar num">${arr}</span><span class="rm">${esc(h.room_block||'')}${h.room?' · '+esc(h.room):''}</span><span class="fs">${fs}</span></button>${open?`<div class="unit">${u.map(x=>guestNote(x,u.length>1)).join('')}</div>`:''}</div>`}
 function guestRow(g){
@@ -993,7 +993,7 @@ function guestNote(g,multi){
     ${row('Arriving',esc([fmt(g.arrive_date),g.arrive_time,g.arrive_mode,g.arrive_ref,g.pickup==='yes'?'pickup wanted':g.pickup==='no'?'no pickup':''].filter(Boolean).join(' · ')))}
     ${row('Leaving',esc([fmt(g.depart_date),g.depart_time,g.depart_mode,g.depart_ref,g.drop==='yes'?'drop wanted':g.drop==='no'?'no drop':''].filter(Boolean).join(' · ')))}
     ${row('Extra nights',esc(g.extra_nights))}${row('Room',esc([g.room_block,g.room,g.room_with&&'with '+g.room_with].filter(Boolean).join(' · ')))}
-    ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Jan':''))}${row('Other days',g.drivers?'Arriving earlier or leaving later: send logistics partner details':'')}${row('Notes',esc(g.notes))}
+    ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Jan':''))}${row('Other days',g.drivers?'Arriving earlier or leaving later: send a few local cab contacts':'')}${row('Notes',esc(g.notes))}
     ${row('Travel form',g.form_at?esc('Received '+fmt(String(g.form_at).slice(0,10))):coming(g)?'Not yet':'')}${row('Last change',esc([fmt(g.updated),g.updated_by].filter(Boolean).join(', by ')))}</dl>`;
   if(!canEdit())return`<div class="note scal">${head}${kv}</div>`;
   const send=!isCore(g)&&coming(g),link=send?personalLink(g):'',wa=link&&waLink(g.phone,inviteText(g,link)),fn=esc(first(g.name));
@@ -1072,9 +1072,9 @@ function renderGuests(){
       <div class="col" style="padding:30px 0 90px"><p class="caps" style="margin-bottom:10px">Allergies and dietary notes</p>${notes.length?notes.map(g=>`<div class="party"><b>${esc(g.name)}</b><span>${esc(g.diet||'')} · ${esc(g.diet_notes)}</span></div>`).join(''):'<p class="empty">None yet.</p>'}</div>`;
   }else if(S.g.tab==='form'){
     const ys=S.guests.filter(coming),byList=[...new Set(ys.map(g=>g.list))];
-    const pending=units(list.filter(g=>coming(g)&&!isCore(g))).filter(u=>!u.some(x=>x.form_at));
+    const pending=units(list.filter(g=>coming(g)&&!isCore(g))).filter(u=>u.some(x=>coming(x)&&!x.form_at));
     box.innerHTML=`<div class="formpanel"><div><p class="caps">The travel form</p><h3>One form per <i>invitation</i></h3>
-      <p class="i">The form only works from a personal link, which fills in the guest and everyone on their invitation. Open a name below to send it on WhatsApp; the group message just tells people their link is coming. Who is on an invitation comes from the Vedding sheet (its C column), and one reply covers them all.</p>
+      <p class="i">The form only works from a personal link, and every guest gets their own (couples get one each). Open a name below to send it on WhatsApp; the group message just tells people their link is coming. Who is on an invitation comes from the Vedding sheet (its C column), and one reply covers them all.</p>
       <p style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">${S.meta.form_url?`<a class="btn rust" href="${esc(S.meta.form_url)}" target="_blank" rel="noopener">Open the form</a><button class="btn ghost" data-copygroup>Copy group message</button>`:'<span class="empty">The form link appears here once the sheet setup has run.</span>'}</p>
       <div class="listprog" style="margin-top:30px">${byList.map(l=>{const a=ys.filter(g=>g.list===l),f=a.filter(g=>g.form_at).length;return`<div class="lp"><b>${esc(l)}</b><span class="caps">${f} of ${a.length}</span><div class="bar2"><i style="width:${a.length?f/a.length*100:0}%"></i></div></div>`}).join('')}</div></div>
       <div><p class="caps" style="margin-bottom:10px">Group message</p><div class="msgbox">${esc(groupText())}</div></div></div>
