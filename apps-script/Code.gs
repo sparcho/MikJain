@@ -337,7 +337,7 @@ FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
 const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'arrangement', 'form_at'];
-const FORM_VERSION = '9';
+const FORM_VERSION = '10';
 
 function createForm_() {
   const meta = meta_();
@@ -367,9 +367,9 @@ function buildForm_(f) {
     if (!codeIt && CODE_TITLES.indexOf(it.getTitle()) >= 0 && it.getType() === FormApp.ItemType.TEXT) codeIt = it;
     else f.deleteItem(it);
   });
-  f.addTextItem().setTitle(Q.idnames).setHelpText('e.g. Priya Sharma, spelt exactly as on your passport or ID').setRequired(true);
+  f.addTextItem().setTitle(Q.idnames).setHelpText('For the hotel, spelt exactly as on your passport or ID.').setRequired(true);
   f.addTextItem().setTitle(Q.phone).setHelpText('With country code, e.g. +44 7700 900123 or +91 98100 00000').setRequired(true);
-  f.addTextItem().setTitle(Q.email).setHelpText('e.g. priya@example.com');
+  f.addTextItem().setTitle(Q.email);
   f.addSectionHeaderItem().setTitle('Your travel')
     .setHelpText('Airport and station transfers: pickups on Sat 30 Jan, drops on the morning of Mon 1 Feb.');
   f.addMultipleChoiceItem().setTitle(Q.when).setRequired(true)
@@ -378,17 +378,17 @@ function buildForm_(f) {
   f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true);
   f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
   f.addTimeItem().setTitle(Q.aTime);
-  f.addTextItem().setTitle(Q.aRef).setHelpText('e.g. 6E 2297 or train 12468. Not booked yet? Leave it blank and edit your answers later.');
+  f.addTextItem().setTitle(Q.aRef).setHelpText('If you have it already. You can come back and edit your answers.');
   f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true);
   f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
   f.addTimeItem().setTitle(Q.dTime);
-  f.addTextItem().setTitle(Q.dRef).setHelpText('e.g. 6E 2298');
+  f.addTextItem().setTitle(Q.dRef);
   f.addMultipleChoiceItem().setTitle(Q.diet).setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
   f.addCheckboxItem().setTitle(Q.id)
     .setHelpText('The hotel needs a photo ID for every guest: passport and Indian visa from abroad; passport, Aadhaar or driving licence from India. '
       + 'Please send a clear photo by 15 November 2026 (' + idSend_() + ') and bring the original with you.')
     .setChoiceValues(['Got it. I’ll send my ID by 15 November']).setRequired(true);
-  f.addParagraphTextItem().setTitle(Q.notes).setHelpText('e.g. accessibility needs or questions');
+  f.addParagraphTextItem().setTitle(Q.notes).setHelpText('Accessibility needs, questions, anything at all');
   f.addSectionHeaderItem().setTitle('For our records');
   const code = codeIt ? codeIt.asTextItem() : f.addTextItem();
   code.setTitle(Q.code).setHelpText('Filled in by your personal link. Please leave it as it is.').setRequired(true)
