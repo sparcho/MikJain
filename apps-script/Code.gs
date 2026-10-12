@@ -21,7 +21,7 @@ const FORM_DESC = 'You’re invited to the wedding of Yash & Anna at Fort Rajwad
 /* Private values (phone numbers, task notes) live in LOCAL, which is only in the paste file, never in this repo. */
 function local_() { return (typeof LOCAL !== 'undefined') ? LOCAL : {}; }
 function idWa_() { return local_().id_whatsapp || 'Sparsh'; }
-function formThanks_() { return 'Thank you! We’ve got your details. Please remember to WhatsApp a photo of your ID to Sparsh on ' + idWa_() + ' by 15 January. See you in Jaisalmer! Yash & Anna'; }
+function formThanks_() { return 'Thank you! We’ve got your details. Please remember to WhatsApp a photo of your ID to Sparsh on ' + idWa_() + ' by 15 November. See you in Jaisalmer! Yash & Anna'; }
 const Q = {
   name: 'Your name',
   others: 'Who this invitation is for',
@@ -335,7 +335,7 @@ FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
 const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'arrangement', 'form_at'];
-const FORM_VERSION = '7';
+const FORM_VERSION = '8';
 
 function createForm_() {
   const meta = meta_();
@@ -392,11 +392,10 @@ function buildForm_(f) {
   f.addTimeItem().setTitle(Q.dTime);
   f.addTextItem().setTitle(Q.dRef);
   f.addMultipleChoiceItem().setTitle(Q.diet).setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
-  f.addTextItem().setTitle(Q.dietNotes);
   f.addCheckboxItem().setTitle(Q.id)
     .setHelpText('The hotel needs a photo ID for every guest at check-in: passport and Indian visa for international guests; passport, Aadhaar or driving licence for guests from India. '
-      + 'Please WhatsApp a clear photo of your ID to Sparsh on ' + idWa_() + ' by 15 January 2027, and bring the original with you.')
-    .setChoiceValues(['Got it. I’ll send my ID by 15 January']).setRequired(true);
+      + 'Please WhatsApp a clear photo of your ID to Sparsh on ' + idWa_() + ' by 15 November 2026, and bring the original with you.')
+    .setChoiceValues(['Got it. I’ll send my ID by 15 November']).setRequired(true);
   f.addParagraphTextItem().setTitle(Q.notes).setHelpText('Accessibility needs, questions, anything at all');
 }
 
@@ -563,6 +562,13 @@ function applyLocalUpdates_() {
     const row = Object.assign({ id: 't' + ('00' + n).slice(-3), n: String(n), type: 'task', status: 'open', priority: 'normal', created: today_(), updated: today_(), updatedBy: 'Claude' }, o);
     upsert_('Tasks', row); T.push(row);
     log_({ name: 'Claude' }, row.id, row.title, 'added');
+  });
+  const D = read_('Dates');
+  (L.newDates || []).forEach(function (o) {
+    if (D.some(function (d) { return d.what === o.what; })) return;
+    const n = D.reduce(function (m, x) { return Math.max(m, Number(String(x.id).slice(1)) || 0); }, 0) + 1;
+    const row = Object.assign({ id: 'k' + ('0' + n).slice(-2) }, o);
+    upsert_('Dates', row); D.push(row);
   });
   (L.taskEdits || []).forEach(function (o) {
     const t = T.find(function (x) { return x.id === o.id; });

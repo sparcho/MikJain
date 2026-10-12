@@ -993,7 +993,7 @@ function guestNote(g,multi){
     ${row('Arriving',esc([fmt(g.arrive_date),g.arrive_time,g.arrive_mode,g.arrive_ref,g.pickup==='yes'?'pickup wanted':g.pickup==='no'?'no pickup':''].filter(Boolean).join(' · ')))}
     ${row('Leaving',esc([fmt(g.depart_date),g.depart_time,g.depart_mode,g.depart_ref,g.drop==='yes'?'drop wanted':g.drop==='no'?'no drop':''].filter(Boolean).join(' · ')))}
     ${row('Extra nights',esc(g.extra_nights))}${row('Room',esc([g.room_block,g.room,g.room_with&&'with '+g.room_with].filter(Boolean).join(' · ')))}
-    ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Jan':''))}${row('Other days',g.drivers?'Arriving earlier or leaving later: send a few local cab contacts':'')}${row('Notes',esc(g.notes))}
+    ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Nov':''))}${row('Other days',g.drivers?'Arriving earlier or leaving later: send a few local cab contacts':'')}${row('Notes',esc(g.notes))}
     ${row('Travel form',g.form_at?esc('Received '+fmt(String(g.form_at).slice(0,10))):coming(g)?'Not yet':'')}${row('Last change',esc([fmt(g.updated),g.updated_by].filter(Boolean).join(', by ')))}</dl>`;
   if(!canEdit())return`<div class="note scal">${head}${kv}</div>`;
   const send=!isCore(g)&&coming(g),link=send?personalLink(g):'',wa=link&&waLink(g.phone,inviteText(g,link)),fn=esc(first(g.name));
