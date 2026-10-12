@@ -26,7 +26,8 @@ function idWa_() { return local_().id_whatsapp || 'Sparsh'; }
 function formThanks_() { return 'Thank you! We’ve got your details. Please remember to WhatsApp photos of your IDs to Sparsh on ' + idWa_() + ' by 15 January. See you in Jaisalmer! Anna & Yash'; }
 const Q = {
   name: 'Your name',
-  others: 'Also on your invitation, sharing your room',
+  others: 'Our arrangements for you',
+  confirm: 'Is this right?',
   code: 'Invitation code',
   idnames: 'Full names as on passport / ID',
   phone: 'Phone / WhatsApp',
@@ -313,7 +314,8 @@ function saveGuest_(u, g) {
 
 const FORM_MAP = {};
 FORM_MAP[Q.name] = 'name'; FORM_MAP['Your full name'] = 'name';
-FORM_MAP[Q.others] = 'others';
+FORM_MAP[Q.others] = 'others'; FORM_MAP['Also on your invitation, sharing your room'] = 'others';
+FORM_MAP[Q.confirm] = 'arrangement';
 FORM_MAP[Q.extra] = 'extra_nights';
 FORM_MAP[Q.code] = 'code'; FORM_MAP['Guest code'] = 'code'; FORM_MAP['Head guest name (as on passport / ID)'] = 'name';
 FORM_MAP[Q.idnames] = 'id_names';
@@ -332,8 +334,8 @@ FORM_MAP[Q.dietNotes] = 'diet_notes';
 FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
-const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'form_at'];
-const FORM_VERSION = '4';
+const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'arrangement', 'form_at'];
+const FORM_VERSION = '5';
 
 function createForm_() {
   const meta = meta_();
@@ -369,12 +371,15 @@ function buildForm_(f) {
   const code = codeIt ? codeIt.asTextItem() : f.addTextItem();
   code.setTitle(Q.code).setHelpText('Filled in by your personal link. Please don’t change it: it tells us who is on your invitation.').setRequired(true)
     .setValidation(FormApp.createTextValidation().setHelpText('Please open the form from the personal link we sent you.').requireTextMatchesPattern('^g[0-9]{3}$').build());
-  const others = f.addTextItem().setTitle(Q.others).setHelpText('Filled in by your personal link. Your invitation covers only the guests shown here, and you share a room. If anything looks wrong, please WhatsApp Sparsh on ' + idWa_() + ' instead of changing it.');
+  const others = f.addTextItem().setTitle(Q.others).setHelpText('Filled in by your personal link, from the family’s plan for your stay. Please don’t edit it: just tell us below whether it’s right.');
+  const confirm = f.addMultipleChoiceItem().setTitle(Q.confirm).setRequired(true)
+    .setChoiceValues(['Yes, that’s right', 'No, something’s not right (we’ll be in touch)']);
   const idn = f.addParagraphTextItem().setTitle(Q.idnames).setHelpText('For the hotel. One line per person on your invitation, spelt exactly as on their passport or ID.').setRequired(true);
   f.moveItem(name.getIndex(), 0);
   f.moveItem(others.getIndex(), 1);
-  f.moveItem(code.getIndex(), 2);
-  f.moveItem(idn.getIndex(), 3);
+  f.moveItem(confirm.getIndex(), 2);
+  f.moveItem(code.getIndex(), 3);
+  f.moveItem(idn.getIndex(), 4);
   f.addTextItem().setTitle(Q.phone).setHelpText('With country code, e.g. +44 7700 900123 or +91 98100 00000').setRequired(true);
   f.addTextItem().setTitle(Q.email);
   const PICK = 'We can pick you up from Jaisalmer airport or railway station on Saturday 30 January only. Arriving on another day? Please arrange your own transfer to the hotel (we’ll share trusted local drivers).';
@@ -439,6 +444,7 @@ function onTravelForm(e) {
     if (a.depart_date) a.drop = (a.depart_date === '2027-02-01' && a.depart_mode !== 'Own transport') ? 'yes' : 'no';
     if (a.id_status) a.id_status = 'promised';
     if (a.drivers) a.drivers = 'send list';
+    if (a.arrangement) a.arrangement = /^yes/i.test(a.arrangement) ? 'confirmed' : 'not right';
     let othersTyped = a.others || ''; delete a.others;
     if (/^just you\.?$/i.test(othersTyped.trim())) othersTyped = '';
     const guests = read_('Guests');
@@ -460,12 +466,9 @@ function onTravelForm(e) {
       // The invitation (household) comes from Vedding only. Names typed in the form never add guests.
       const hid = g.household || '';
       const members = hid ? guests.filter(function (x) { return x.household === hid && x.id !== g.id; }) : [];
-      if (othersTyped) {
-        const known = members.map(function (m) { return norm(m.name); });
-        const extra = othersTyped.split(/,|&| and /i).map(function (x) { return x.trim(); }).filter(function (x) {
-          const nx = norm(x); return nx && !known.some(function (k) { return k && (nx.indexOf(k) >= 0 || k.indexOf(nx) >= 0 || nx.split(' ')[0] === k.split(' ')[0]); });
-        });
-        if (extra.length) { body.party_names = othersTyped; body.notes = ((g.notes ? g.notes + ' · ' : '') + 'Changed the invitation on the form, added: ' + extra.join(', ') + ' (not on the invitation; check with the family)').slice(0, 1000); }
+      if (/^no/i.test(a.arrangement || '')) {
+        body.notes = ((g.notes ? g.notes + ' · ' : '') + 'Said our arrangement for them is NOT right: get in touch').slice(0, 1000);
+        sh_('Activity').appendRow([new Date().toISOString(), 'Travel form', g.id, 'Guest: ' + g.name, 'says the invitation arrangement is not right: please call them']);
       }
       upsert_('Guests', body);
       members.forEach(function (m) {
@@ -541,7 +544,7 @@ function migrate_() {
 
   // ---- 11 Oct 26: one-page registration form, couples, new tracker items ----
   const gs = sh_('Guests'), gh = headers_('Guests');
-  ['household', 'id_status', 'drivers', 'id_names'].forEach(function (k) {
+  ['household', 'id_status', 'drivers', 'id_names', 'arrangement'].forEach(function (k) {
     if (gh.indexOf(k) < 0) { gs.getRange(1, gs.getLastColumn() + 1).setValue(k).setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); gh.push(k); }
   });
   gs.createTextFinder('Yash & Ana').matchEntireCell(true).replaceAllWith('Yash & Anna');
