@@ -50,7 +50,7 @@ const Q = {
 };
 const TEXT_TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const TASK_FIELDS = ['area', 'title', 'type', 'waitingOn', 'next', 'due', 'status', 'priority', 'notes'];
-const GUEST_EDIT = ['id_status', 'drivers', 'rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
+const GUEST_EDIT = ['sent_at', 'id_status', 'drivers', 'rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
   'depart_date', 'depart_time', 'depart_mode', 'depart_ref', 'drop', 'extra_nights', 'room_block', 'room', 'room_with', 'diet', 'diet_notes', 'notes'];
 const PRIVATE_GUEST = ['phone', 'email'];
 
@@ -524,7 +524,7 @@ function migrate_() {
 
   // ---- 11 Oct 26: one-page registration form, couples, new tracker items ----
   const gs = sh_('Guests'), gh = headers_('Guests');
-  ['household', 'id_status', 'drivers', 'id_names', 'arrangement'].forEach(function (k) {
+  ['household', 'id_status', 'drivers', 'id_names', 'arrangement', 'sent_at'].forEach(function (k) {
     if (gh.indexOf(k) < 0) { gs.getRange(1, gs.getLastColumn() + 1).setValue(k).setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); gh.push(k); }
   });
   gs.createTextFinder('Yash & Ana').matchEntireCell(true).replaceAllWith('Yash & Anna');
@@ -535,6 +535,7 @@ function migrate_() {
   if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncVedding'; })) ScriptApp.newTrigger('syncVedding').timeBased().everyHours(6).create();
   fixWeekdays_();
   applyLocalUpdates_();
+  uploadGuides_();
 }
 
 /** Always Yash first: "Anna & Yash" becomes "Yash & Anna" in every tab, once. */
@@ -562,6 +563,26 @@ function fixWeekdays_() {
   setMeta_('weekdays_v', '1');
 }
 
+/** Finished guest guides (PDFs carried in LOCAL) go into the sheet's Drive folder, view-only by link, and onto the Documents page. Once per version. */
+function uploadGuides_() {
+  const G = local_().guides || [];
+  if (!G.length) return;
+  const meta = meta_();
+  const parents = DriveApp.getFileById(ss_().getId()).getParents();
+  const dir = parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
+  G.forEach(function (g) {
+    const key = 'file_' + g.row.id + '_' + g.v;
+    let url = meta[key];
+    if (!url) {
+      const f = dir.createFile(Utilities.newBlob(Utilities.base64Decode(g.b64), 'application/pdf', g.name));
+      f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      url = f.getUrl();
+      setMeta_(key, url);
+    }
+    upsert_('Docs', Object.assign({}, g.row, { link: url }));
+  });
+}
+
 /** Adds tracker items and task edits listed in LOCAL (paste file only). Skips anything already there. */
 function applyLocalUpdates_() {
   const L = local_();
@@ -573,6 +594,7 @@ function applyLocalUpdates_() {
     upsert_('Tasks', row); T.push(row);
     log_({ name: 'Claude' }, row.id, row.title, 'added');
   });
+  (L.upserts || []).forEach(function (o) { upsert_(o.tab, o.row); });
   const D = read_('Dates');
   (L.newDates || []).forEach(function (o) {
     if (D.some(function (d) { return d.what === o.what; })) return;
