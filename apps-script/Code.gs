@@ -592,7 +592,15 @@ function applyLocalUpdates_() {
 
 /** Reads the Vedding "final guest list": three side-by-side lists, a "C" mark starts a couple (that row + the next). */
 function readVedding_(id) {
-  const v = SpreadsheetApp.openById(id).getSheetByName('final guest list').getDataRange().getValues();
+  const rng = SpreadsheetApp.openById(id).getSheetByName('final guest list').getDataRange();
+  const v = rng.getValues(), bg = rng.getBackgrounds();
+  // Core family rows are highlighted orange in Vedding: they don't get a form link.
+  const isOrange = function (hex) {
+    const m = String(hex || '').match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (!m) return false;
+    const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+    return r >= 0xE0 && g >= 0x60 && g <= 0xD8 && b <= 0x80;
+  };
   const blocks = [{ c: 0, list: 'Yash & Anna' }, { c: 11, list: 'Sparsh' }, { c: 22, list: 'Rajiv & Shalini' }];
   const out = [];
   blocks.forEach(function (b) {
@@ -603,7 +611,7 @@ function readVedding_(id) {
       const c1 = String(r[b.c + 1] || '').trim(), c2 = String(r[b.c + 2] || '').trim();
       if (/save date sent/i.test(c1) || /^rsvp$/i.test(c2)) { group = name; continue; }
       if (/total|list$/i.test(name)) continue;
-      out.push({ list: b.list, group: group, name: name, rsvp: c2, sex: String(r[b.c + 3] || '').trim(), couple: /^c$/i.test(String(r[b.c + 4] || '').trim()) });
+      out.push({ list: b.list, group: group, name: name, rsvp: c2, sex: String(r[b.c + 3] || '').trim(), couple: /^c$/i.test(String(r[b.c + 4] || '').trim()), core: isOrange(bg[i][b.c]) ? 'Y' : '' });
     }
   });
   return out;
@@ -618,7 +626,7 @@ function syncVedding_() {
   if (!meta.source_vedding_id) return 'No Vedding id';
   const V = readVedding_(meta.source_vedding_id);
   const gs = sh_('Guests'), gh = headers_('Guests');
-  if (gh.indexOf('household') < 0) { gs.getRange(1, gs.getLastColumn() + 1).setValue('household').setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); }
+  ['household', 'core'].forEach(function (k) { if (headers_('Guests').indexOf(k) < 0) gs.getRange(1, gs.getLastColumn() + 1).setValue(k).setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); });
   const guests = read_('Guests');
   const norm = function (x) { return String(x || '').toLowerCase().replace(/\s+/g, ' ').trim(); };
   const listOf = function (l) { return l === 'Yash & Ana' ? 'Yash & Anna' : l; };
@@ -683,9 +691,14 @@ function syncVedding_() {
   }
   const now = read_('Guests');
   let changed = 0;
+  const coreOf = {};
+  V.forEach(function (r) { coreOf[r.id] = r.core; });
   now.forEach(function (g) {
     if (!(g.id in hh)) return;
-    if (String(g.household || '') !== hh[g.id]) { upsert_('Guests', { id: g.id, household: hh[g.id] }); changed++; }
+    const body = {};
+    if (String(g.household || '') !== hh[g.id]) { body.household = hh[g.id]; changed++; }
+    if (String(g.core || '') !== (coreOf[g.id] || '')) body.core = coreOf[g.id] || '';
+    if (Object.keys(body).length) { body.id = g.id; upsert_('Guests', body); }
   });
   const msg = 'Vedding sync: ' + V.length + ' names, ' + added + ' added, ' + renamed + ' renamed, ' + dropped + ' no longer listed, ' + changed + ' invitation links updated';
   setMeta_('vedding_synced', new Date().toISOString());

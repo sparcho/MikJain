@@ -400,6 +400,8 @@ footer .lnk{color:var(--on-ox);margin-top:22px}
 .party b{display:block;font:400 17px/1.25 var(--serif);color:var(--cocoa);font-weight:400}
 .party span{font:600 9.5px/1.5 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--adobe-d)}
 .foods{display:grid;grid-template-columns:repeat(5,1fr);padding:40px 0 30px}
+.unit .pname{font:400 20px/1.2 var(--serif);color:var(--ox);margin-bottom:10px;display:flex;gap:10px;align-items:center}
+.unit .note+.note{margin-top:14px}
 .formpanel{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;padding:34px 0 20px}
 .formpanel h3{font:400 30px/1.1 var(--serif);color:var(--ox);margin:8px 0 12px}
 .formpanel p.i{font:italic 18px/1.45 var(--serif);color:var(--muted)}
@@ -807,7 +809,7 @@ async function api(action,body={}){
   if(!j.ok){const e=new Error(j.error||'Something went wrong.');e.code=j.code;throw e}
   return j;
 }
-function load(d){Object.assign(S,{me:d.me,tasks:d.tasks||[],activity:d.activity||[],programme:d.programme||[],dates:d.dates||[],docs:d.docs||[],people:d.people||[],meta:d.meta||{},guests:d.guests||[],rooms:d.rooms||[],blocks:d.blocks||[],runsheet:d.runsheet||[]});renderAll()}
+function load(d){Object.assign(S,{me:d.me,tasks:d.tasks||[],activity:d.activity||[],programme:d.programme||[],dates:d.dates||[],docs:d.docs||[],people:d.people||[],meta:d.meta||{},guests:(d.guests||[]).filter(g=>g.group!=='Not in Vedding'),rooms:d.rooms||[],blocks:d.blocks||[],runsheet:d.runsheet||[]});renderAll()}
 async function refresh(quiet){try{const j=await api('data');load(j.data)}catch(e){if(e.code===401)signOut('Your session ended. Please sign in again.');else if(!quiet)toast(e.message)}}
 function showApp(on){$('#gate').hidden=on;$('#app').hidden=!on;if(on)route()}
 function signOut(msg){if(S.token)api('logout').catch(()=>{});S.token=null;store.set('hq-token',null);showApp(false);$('#pw').value='';const m=$('#loginMsg');m.textContent=msg||'Signed out.';m.className='gmsg'}
@@ -957,21 +959,34 @@ function renderTracker(){
 /* ---------- guests ---------- */
 const RS=g=>/^y/i.test(g.rsvp||'')?'<span class="sw s-done">Coming</span>':/^n/i.test(g.rsvp||'')?'<span class="sw s-hold">Not coming</span>':'<span class="sw s-open">Unsure</span>';
 const DIETS=['Vegetarian','Jain','Vegan','Non-vegetarian'];
-function personalLink(g){const m=S.meta;if(!m.form_url)return'';g=headOf(g);const o=onInvite(g).filter(x=>x.id!==g.id).map(x=>x.name),pn=o.length?`You and ${o.length>1?o.slice(0,-1).join(', ')+' and '+o[o.length-1]:o[0]}, staying together`:'Just you: arrangements are being made for you personally';let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
+function personalLink(g){const m=S.meta;if(!m.form_url)return'';const o=onInvite(g).filter(x=>x.id!==g.id).map(x=>x.name),pn=o.length?`You and ${o.length>1?o.slice(0,-1).join(', ')+' and '+o[o.length-1]:o[0]}, staying together`:'Just you: arrangements are being made for you personally';let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
   if(m.form_entry_name)u+=`&entry.${m.form_entry_name}=${encodeURIComponent(g.name)}`;if(m.form_entry_others)u+=`&entry.${m.form_entry_others}=${encodeURIComponent(pn)}`;if(m.form_entry_code)u+=`&entry.${m.form_entry_code}=${encodeURIComponent(g.id)}`;return u}
-const inviteText=(g,link)=>{const ns=onInvite(headOf(g)).map(x=>first(x.name));return`Hi ${ns.length>1?ns.slice(0,-1).join(', ')+' & '+ns[ns.length-1]:first(g.name)}! Anna & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. Here’s your personal link to the guest registration. It already shows our arrangements for you, so it takes about 2 minutes. Please fill it in by 20 October.\n\n${link}\n\nThank you!`};
+const inviteText=(g,link)=>{return`Hi ${first(g.name)}! Anna & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. Here’s your personal link to the guest registration. It already shows our arrangements for you, so it takes about 2 minutes. Please fill it in by 20 October.\n\n${link}\n\nThank you!`};
 const groupText=()=>`Hello everyone! Anna & Yash’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer.\n\nWe’ll send each of you a personal link to the guest registration on WhatsApp. It already shows our arrangements for you, so it takes about 2 minutes. Please fill it in by 20 October.\n\nThank you!`;
 const waLink=(phone,text)=>{const d=String(phone||'').replace(/[^\d]/g,'');return d.length>=8?`https://wa.me/${d}?text=${encodeURIComponent(text)}`:''};
 async function copy(text,label){try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.append(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove()}toast(label||'Copied.')}
 function gFiltered(){const q=S.g.q.trim().toLowerCase();return S.guests.filter(g=>(!S.g.list||g.list===S.g.list)&&(!q||`${g.name} ${g.group} ${g.list} ${g.from_city} ${g.party_names} ${g.notes} ${g.room_block}`.toLowerCase().includes(q)))}
 function chapter(key,title,count,inner,i){const isOpen=!!S.g.q.trim()||S.gopen.has(key);return`<div class="ch${isOpen?' open':''}"><button class="ch-h" data-gch="${esc(key)}" aria-expanded="${isOpen}"><span class="rn">${ROMAN(i+1)}.</span><span class="cn">${title}</span><span class="caps">${count}</span><span class="chev">›</span><span class="prog" aria-hidden="true"></span></button><div class="rows">${inner}</div></div>`}
+/* One row per invitation (a couple or family from Vedding shows as one row). */
+const isCore=g=>g.core==='Y';
+const unitOf=g=>[g,...mates(g)].sort((a,b)=>a.id.localeCompare(b.id));
+function units(list){const seen=new Set(),out=[];list.forEach(g=>{if(seen.has(g.id))return;const u=unitOf(g);u.forEach(x=>seen.add(x.id));out.push(u)});return out}
+const unitName=u=>u.length===1?esc(u[0].name):u.length===2?`${esc(u[0].name)} <i>&amp;</i> ${esc(u[1].name)}`:`${u.slice(0,-1).map(x=>esc(x.name)).join(', ')} <i>&amp;</i> ${esc(u[u.length-1].name)}`;
+function unitRow(u){
+  const h=u[0],open=S.gRow===h.id,c=u.filter(coming),a=c.find(x=>x.arrive_date)||h;
+  const arr=a.arrive_date?`${fmtShort(a.arrive_date)}${a.arrive_time?' · '+esc(a.arrive_time):''}<em>${esc(a.arrive_mode||'')}${a.arrive_ref?' '+esc(a.arrive_ref):''}</em>`:'<span class="dt nd" style="font-size:15px">—</span>';
+  const rs=u.length===1||new Set(u.map(x=>RS(x))).size===1?RS(h):`<span class="sw s-open">${c.length} of ${u.length} coming</span>`;
+  const fs=u.some(isCore)?'<span class="sw s-waiting">Family</span>':c.length?(u.some(x=>x.form_at)?'<span class="sw s-done">Form in</span>':'<span class="sw s-open">No reply</span>'):'';
+  return`<div class="item grow${open?' open':''}${!c.length?' no':''}" id="g-${esc(h.id)}"><button class="ln" data-grow="${esc(h.id)}" aria-expanded="${open}">
+    <span class="nm">${unitName(u)}</span><span class="rs">${rs}</span><span class="ar num">${arr}</span><span class="rm">${esc(h.room_block||'')}${h.room?' · '+esc(h.room):''}</span><span class="fs">${fs}</span></button>${open?`<div class="unit">${u.map(x=>guestNote(x,u.length>1)).join('')}</div>`:''}</div>`}
 function guestRow(g){
   const open=S.gRow===g.id,arr=g.arrive_date?`${fmtShort(g.arrive_date)}${g.arrive_time?' · '+esc(g.arrive_time):''}<em>${esc(g.arrive_mode||'')}${g.arrive_ref?' '+esc(g.arrive_ref):''}</em>`:'<span class="dt nd" style="font-size:15px">—</span>';
   const fs=coming(g)?(g.form_at?'<span class="sw s-done">Form in</span>':'<span class="sw s-open">No reply</span>'):'';
   return`<div class="item grow${open?' open':''}${/^n/i.test(g.rsvp||'')?' no':''}" id="g-${esc(g.id)}"><button class="ln" data-grow="${esc(g.id)}" aria-expanded="${open}">
     <span class="nm">${esc(g.name)}${mates(g).length===1?`<small>& ${esc(first(mates(g)[0].name))}</small>`:mates(g).length>1?`<small>+${mates(g).length}</small>`:''}</span><span class="rs">${RS(g)}</span><span class="ar num">${arr}</span><span class="rm">${esc(g.room_block||'')}${g.room?' · '+esc(g.room):''}</span><span class="fs">${fs}</span></button>${open?guestNote(g):''}</div>`}
-function guestNote(g){
+function guestNote(g,multi){
   const row=(k,v)=>v?`<dt>${k}</dt><dd>${v}</dd>`:'';
+  const head=multi?`<p class="pname">${esc(g.name)} ${RS(g)}</p>`:'';
   const tel=g.phone?`<a href="tel:${esc(String(g.phone).replace(/[^\d+]/g,''))}">${esc(g.phone)}</a>`:'';
   const kv=`<dl class="kv">${row('List',esc(`${g.list}${g.group?' · '+g.group:''}`))}${row('Phone',tel)}${row('Email',g.email?`<a href="mailto:${esc(g.email)}">${esc(g.email)}</a>`:'')}${row('From',esc(g.from_city))}
     ${row('Invitation',mates(g).length?esc('With '+mates(g).map(x=>x.name+(coming(x)?'':' (not coming)')).join(', ')+' · from Vedding'):'Just them · from Vedding')}${row('Arrangement',g.arrangement==='confirmed'?'Confirmed on the form':g.arrangement==='not right'?'<span class="c-alert">Says it’s not right: get in touch</span>':'')}${row('Names on ID',g.id_names&&esc(g.id_names))}${row('Form names',g.party_names&&esc(g.party_names))}
@@ -980,12 +995,13 @@ function guestNote(g){
     ${row('Extra nights',esc(g.extra_nights))}${row('Room',esc([g.room_block,g.room,g.room_with&&'with '+g.room_with].filter(Boolean).join(' · ')))}
     ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Jan':''))}${row('Drivers list',g.drivers?'Wants the list':'')}${row('Notes',esc(g.notes))}
     ${row('Travel form',g.form_at?esc('Received '+fmt(String(g.form_at).slice(0,10))):coming(g)?'Not yet':'')}${row('Last change',esc([fmt(g.updated),g.updated_by].filter(Boolean).join(', by ')))}</dl>`;
-  if(!canEdit())return`<div class="note scal">${kv}</div>`;
-  const link=personalLink(g),wa=link&&waLink(g.phone,inviteText(g,link));
+  if(!canEdit())return`<div class="note scal">${head}${kv}</div>`;
+  const send=!isCore(g)&&coming(g),link=send?personalLink(g):'',wa=link&&waLink(g.phone,inviteText(g,link)),fn=esc(first(g.name));
   const ed=S.gEdit===g.id;
-  return`<div class="note scal">${kv}<div class="acts">
-    ${wa?`<a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">${g.form_at?'WhatsApp':'Send form on WhatsApp'}</a>`:''}
-    ${link?`<button class="btn ghost" data-copylink="${esc(g.id)}">Copy personal link</button><button class="btn ghost" data-copymsg="${esc(g.id)}">Copy message</button>`:''}
+  return`<div class="note scal">${head}${kv}<div class="acts">
+    ${isCore(g)?'<span class="caps">Core family: no form link needed</span>':''}
+    ${wa?`<a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">${g.form_at?'WhatsApp':'Send form'} to ${fn}</a>`:''}
+    ${link?`<button class="btn ghost" data-copymsg="${esc(g.id)}">Copy message for ${fn}</button><button class="btn ghost" data-copylink="${esc(g.id)}">Copy ${fn}’s link</button>`:''}
     <button class="btn ghost" data-gedit="${esc(g.id)}">${ed?'Close editor':'Edit'}</button><span class="msg" data-msg></span></div>${ed?guestForm(g):''}</div>`}
 function guestForm(g){
   const v=k=>esc(g[k]??'');const blocks=S.blocks.map(b=>b.block);
@@ -1028,7 +1044,7 @@ function renderGuests(){
     const by=new Map();list.forEach(g=>{by.has(g.list)||by.set(g.list,[]);by.get(g.list).push(g)});
     box.innerHTML=[...by].map(([l,gs],i)=>{const y=gs.filter(coming).length,f=gs.filter(g=>coming(g)&&g.form_at).length;
       const sub=new Map();gs.forEach(g=>{const k=g.group||'';sub.has(k)||sub.set(k,[]);sub.get(k).push(g)});
-      const inner=[...sub].map(([s,arr])=>(s?`<p class="sub">${esc(s)}</p>`:'')+arr.map(guestRow).join('')).join('');
+      const inner=[...sub].map(([s,arr])=>(s?`<p class="sub">${esc(s)}</p>`:'')+units(arr).map(unitRow).join('')).join('');
       return chapter('l:'+l,esc(l),`<span class="c-done">${y} coming</span> · ${f} forms`,inner,i)}).join('')||'<p class="empty">No matches.</p>';
   }else if(S.g.tab==='arrivals'||S.g.tab==='departures'){
     const A=S.g.tab==='arrivals',dk=A?'arrive_date':'depart_date',tk=A?'arrive_time':'depart_time',mk=A?'arrive_mode':'depart_mode',rk=A?'arrive_ref':'depart_ref',pk=A?'pickup':'drop';
@@ -1056,13 +1072,13 @@ function renderGuests(){
       <div class="col" style="padding:30px 0 90px"><p class="caps" style="margin-bottom:10px">Allergies and dietary notes</p>${notes.length?notes.map(g=>`<div class="party"><b>${esc(g.name)}</b><span>${esc(g.diet||'')} · ${esc(g.diet_notes)}</span></div>`).join(''):'<p class="empty">None yet.</p>'}</div>`;
   }else if(S.g.tab==='form'){
     const ys=S.guests.filter(coming),byList=[...new Set(ys.map(g=>g.list))];
-    const pending=list.filter(g=>coming(g)&&!g.form_at&&headOf(g)===g);
+    const pending=units(list.filter(g=>coming(g)&&!isCore(g))).filter(u=>!u.some(x=>x.form_at));
     box.innerHTML=`<div class="formpanel"><div><p class="caps">The travel form</p><h3>One form per <i>invitation</i></h3>
       <p class="i">The form only works from a personal link, which fills in the guest and everyone on their invitation. Open a name below to send it on WhatsApp; the group message just tells people their link is coming. Who is on an invitation comes from the Vedding sheet (its C column), and one reply covers them all.</p>
       <p style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">${S.meta.form_url?`<a class="btn rust" href="${esc(S.meta.form_url)}" target="_blank" rel="noopener">Open the form</a><button class="btn ghost" data-copygroup>Copy group message</button>`:'<span class="empty">The form link appears here once the sheet setup has run.</span>'}</p>
       <div class="listprog" style="margin-top:30px">${byList.map(l=>{const a=ys.filter(g=>g.list===l),f=a.filter(g=>g.form_at).length;return`<div class="lp"><b>${esc(l)}</b><span class="caps">${f} of ${a.length}</span><div class="bar2"><i style="width:${a.length?f/a.length*100:0}%"></i></div></div>`}).join('')}</div></div>
       <div><p class="caps" style="margin-bottom:10px">Group message</p><div class="msgbox">${esc(groupText())}</div></div></div>
-      ${chapter('f:pending','Not replied <i>yet</i>',`<span class="c-open">${pending.length} invitations</span>`,pending.map(guestRow).join(''),0)}`;
+      ${chapter('f:pending','Not replied <i>yet</i>',`<span class="c-open">${pending.length} invitations</span>`,pending.map(unitRow).join(''),0)}`;
   }
 }
 
