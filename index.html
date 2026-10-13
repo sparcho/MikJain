@@ -405,6 +405,7 @@ footer .lnk{color:var(--on-ox);margin-top:22px}
 .formpanel{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;padding:34px 0 20px}
 .formpanel h3{font:400 30px/1.1 var(--serif);color:var(--ox);margin:8px 0 12px}
 .formpanel p.i{font:italic 18px/1.45 var(--serif);color:var(--muted)}
+.sendsteps{margin:0;padding-left:20px;font:15px/1.55 var(--sans);color:var(--cocoa)}.sendsteps>li{margin-bottom:8px}.sendsteps ul{margin:6px 0 0;padding-left:16px}.sendsteps ul li{margin-bottom:2px}.sendsteps code{font-size:13px;background:var(--paper-2);padding:1px 5px}.sendsteps .caps{margin-left:6px;font-size:10px}
 .msgbox{overflow-wrap:anywhere;background:var(--paper-2);box-shadow:inset 0 0 0 1px var(--line-2);padding:18px 20px;font:15px/1.55 var(--sans);white-space:pre-wrap;color:var(--cocoa)}
 .listprog{display:grid;gap:14px;margin-top:8px}
 .listprog .lp{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline}
@@ -967,9 +968,21 @@ const RS=g=>/^y/i.test(g.rsvp||'')?'<span class="sw s-done">Coming</span>':/^n/i
 const DIETS=['Vegetarian','Jain','Vegan','Non-vegetarian'];
 function personalLink(g){const m=S.meta;if(!m.form_url)return'';const o=onInvite(g).filter(x=>x.id!==g.id).map(x=>x.name),pn=(()=>{const all=[g.name,...o],n=all.length;return n===1?`${g.name} only (1 guest)`:`${all.slice(0,-1).join(', ')} and ${all[n-1]} (${n} guests, ${n===2?'sharing a room':'staying together'})`})();let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
   if(m.form_entry_name)u+=`&entry.${m.form_entry_name}=${encodeURIComponent(g.name)}`;if(m.form_entry_others)u+=`&entry.${m.form_entry_others}=${encodeURIComponent(pn)}`;if(m.form_entry_code)u+=`&entry.${m.form_entry_code}=${encodeURIComponent(g.id)}`;return u}
-const inviteText=(g,link)=>{return`Hi ${first(g.name)}! Yash & Anna’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer. Here’s your own personal link to the guest registration (just for you; it takes about 2 minutes). Please fill it in by 20 October.\n\n${link}\n\nThank you!`};
-const groupText=()=>`Hello everyone! Yash & Anna’s wedding is coming up: 30 & 31 January at Fort Rajwada, Jaisalmer.\n\nWe’ll send each of you a personal link to the guest registration on WhatsApp. Everyone fills in their own, and it takes about 2 minutes. Please fill it in by 20 October.\n\nThank you!`;
-const waLink=(phone,text)=>{const d=String(phone||'').replace(/[^\d]/g,'');return d.length>=8?`https://wa.me/${d}?text=${encodeURIComponent(text)}`:''};
+const DEADLINE='25 October';
+const inviteText=(g,link)=>`Hi ${first(g.name)}! Yash & Anna’s wedding is coming up: Sat 30 & Sun 31 January 2027 at Fort Rajwada, Jaisalmer. Here’s everything you need to plan your trip:
+
+1. *Guest registration*: your own personal link below (just for you; it takes about 2 minutes)
+2. *Travel & Stay guide*: dates, getting to Jaisalmer, the hotel and photo ID
+3. *Outfit guide · Ladies*: what to wear to each event
+4. *Outfit guide · Gents*: the same for the men
+
+The three guides are attached. Please fill in the registration by *${DEADLINE}*.
+
+${link}
+
+Any questions, just reply here. See you in Jaisalmer!`;
+const PACK=[['Travel_and_Stay_v6.pdf','Travel & Stay guide'],['Attire_Guide_Women_v4.pdf','Outfit guide · Ladies'],['Attire_Guide_Men_v4.pdf','Outfit guide · Gents']];
+const waLink=phone=>{const d=String(phone||'').replace(/[^\d]/g,'');return d.length>=8?`https://wa.me/${d}`:''};
 async function copy(text,label){try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.append(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove()}toast(label||'Copied.')}
 function gFiltered(){const q=S.g.q.trim().toLowerCase();return S.guests.filter(g=>(!S.g.list||g.list===S.g.list)&&(!q||`${g.name} ${g.group} ${g.list} ${g.from_city} ${g.party_names} ${g.notes} ${g.room_block}`.toLowerCase().includes(q)))}
 function chapter(key,title,count,inner,i){const isOpen=!!S.g.q.trim()||S.gopen.has(key);return`<div class="ch${isOpen?' open':''}"><button class="ch-h" data-gch="${esc(key)}" aria-expanded="${isOpen}"><span class="rn">${ROMAN(i+1)}.</span><span class="cn">${title}</span><span class="caps">${count}</span><span class="chev">›</span><span class="prog" aria-hidden="true"></span></button><div class="rows">${inner}</div></div>`}
@@ -1002,12 +1015,11 @@ function guestNote(g,multi){
     ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Nov':''))}${row('Other days',g.drivers?'Arriving earlier or leaving later: send a few local cab contacts':'')}${row('Notes',esc(g.notes))}
     ${row('Link sent',g.sent_at?esc(fmt(g.sent_at)):'')}${row('Travel form',g.form_at?esc('Received '+fmt(String(g.form_at).slice(0,10))):coming(g)?'Not yet':'')}${row('Last change',esc([fmt(g.updated),g.updated_by].filter(Boolean).join(', by ')))}</dl>`;
   if(!canEdit())return`<div class="note scal">${head}${kv}</div>`;
-  const send=!isCore(g)&&coming(g),link=send?personalLink(g):'',wa=link&&waLink(g.phone,inviteText(g,link)),fn=esc(first(g.name));
+  const send=!isCore(g)&&coming(g),link=send?personalLink(g):'',wa=link&&waLink(g.phone),fn=esc(first(g.name));
   const ed=S.gEdit===g.id;
   return`<div class="note scal">${head}${kv}<div class="acts">
     ${isCore(g)?'<span class="caps">Core family: no form link needed</span>':''}
-    ${wa?`<a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">${g.form_at?'WhatsApp':'Send form'} to ${fn}</a>`:''}
-    ${link?`<button class="btn ghost" data-copymsg="${esc(g.id)}">Copy message for ${fn}</button><button class="btn ghost" data-copylink="${esc(g.id)}">Copy ${fn}’s link</button><button class="btn ${g.sent_at?'ghost':''}" data-gsent="${esc(g.id)}">${g.sent_at?`Sent ${esc(fmt(g.sent_at))} · undo`:`Mark sent to ${fn}`}</button>`:''}
+    ${link?`<button class="btn" data-copymsg="${esc(g.id)}">Copy message for ${fn}</button>${wa?`<a class="btn ghost" href="${esc(wa)}" target="_blank" rel="noopener">Open WhatsApp chat</a>`:''}<button class="btn ${g.sent_at?'ghost':''}" data-gsent="${esc(g.id)}">${g.sent_at?`Sent ${esc(fmt(g.sent_at))} · undo`:`Mark sent to ${fn}`}</button>`:''}
     <button class="btn ghost" data-gedit="${esc(g.id)}">${ed?'Close editor':'Edit'}</button><span class="msg" data-msg></span></div>${ed?guestForm(g):''}</div>`}
 function guestForm(g){
   const v=k=>esc(g[k]??'');const blocks=S.blocks.map(b=>b.block);
@@ -1081,10 +1093,15 @@ function renderGuests(){
     const pending=units(list.filter(g=>coming(g)&&!isCore(g))).filter(u=>u.some(x=>coming(x)&&!x.form_at));
     const unsent=pending.filter(u=>u.some(x=>coming(x)&&!x.form_at&&!x.sent_at)),waiting=pending.filter(u=>!unsent.includes(u));
     box.innerHTML=`<div class="formpanel"><div><p class="caps">The travel form</p><h3>One form per <i>invitation</i></h3>
-      <p class="i">The form only works from a personal link, and every guest gets their own (couples get one each). Open a name below to send it on WhatsApp; the group message just tells people their link is coming. Couples share a row, but each person fills in their own form. Tap “Mark sent” once you’ve sent someone their link.</p>
-      <p style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">${S.meta.form_url?`<a class="btn rust" href="${esc(S.meta.form_url)}" target="_blank" rel="noopener">Open the form</a><button class="btn ghost" data-copygroup>Copy group message</button>`:'<span class="empty">The form link appears here once the sheet setup has run.</span>'}</p>
+      <p class="i">Every guest gets one WhatsApp: the copied message (with their own form link) plus the three guides. Couples share a row, but each person gets their own message and fills in their own form.</p>
+      <p style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">${S.meta.form_url?`<a class="btn rust" href="${esc(S.meta.form_url)}" target="_blank" rel="noopener">Open the form</a>`:'<span class="empty">The form link appears here once the sheet setup has run.</span>'}</p>
       <div class="listprog" style="margin-top:30px">${byList.map(l=>{const a=ys.filter(g=>g.list===l),f=a.filter(g=>g.form_at).length;const sn=a.filter(g=>g.sent_at||g.form_at).length;return`<div class="lp"><b>${esc(l)}</b><span class="caps">${sn} sent · ${f} of ${a.length} in</span><div class="bar2"><i style="width:${a.length?f/a.length*100:0}%"></i></div></div>`}).join('')}</div></div>
-      <div><p class="caps" style="margin-bottom:10px">Group message</p><div class="msgbox">${esc(groupText())}</div></div></div>
+      <div><p class="caps" style="margin-bottom:10px">How to send <span class="q" tabindex="0" data-tip="Keep the HQ, WhatsApp and the guides folder open side by side, then work down the list.">?</span></p><ol class="sendsteps">
+        <li>Open a name below and press <b>Copy message</b>.</li>
+        <li>Press <b>Open WhatsApp chat</b> (or find them in WhatsApp) and paste.</li>
+        <li>Drag in the three guides from <code>05_GUEST_GUIDES/PACK_v4</code> (Russian speakers: the <code>RU</code> folder).<ul>${PACK.map(([f,t])=>`<li>${esc(t)} <span class="caps">${esc(f)}</span></li>`).join('')}</ul></li>
+        <li>Send, then press <b>Mark sent</b>.</li></ol>
+        <p class="caps" style="margin:22px 0 10px">The message</p><div class="msgbox">${esc(inviteText({name:'Name'},'[their personal link]')).replace(/\*([^*\n]+)\*/g,'<b>$1</b>')}</div></div></div>
       ${chapter('f:unsent','Link not <i>sent</i>',`<span class="c-open">${unsent.length} invitations</span>`,unsent.map(unitRow).join(''),0)}
       ${chapter('f:pending','Sent, no reply <i>yet</i>',`<span class="c-open">${waiting.length} invitations</span>`,waiting.map(unitRow).join(''),1)}`;
   }
@@ -1209,11 +1226,9 @@ document.addEventListener('click',async ev=>{
   if(D.gch){S.gopen.has(D.gch)?S.gopen.delete(D.gch):S.gopen.add(D.gch);prefs.gopen=[...S.gopen];savePrefs();renderGuests();return}
   if(D.grow){S.gRow=S.gRow===D.grow?null:D.grow;S.gEdit=null;renderGuests();return}
   if(D.gedit){S.gEdit=S.gEdit===D.gedit?null:D.gedit;renderGuests();return}
-  if(D.copylink){const g=S.guests.find(x=>x.id===D.copylink);copy(personalLink(g),'Personal link copied.');return}
   if(D.gsent){const g=S.guests.find(x=>x.id===D.gsent);if(!g)return;const v=g.sent_at?'':new Date().toISOString().slice(0,10);const old=g.sent_at;g.sent_at=v;renderGuests();
     api('saveGuest',{guest:{id:g.id,sent_at:v,_change:v?'marked the form link as sent':'unmarked the form link as sent'}}).then(()=>toast(v?`Marked sent to ${first(g.name)}.`:'Unmarked.')).catch(e=>{g.sent_at=old;renderGuests();toast(e.message)});return}
   if(D.copymsg){const g=S.guests.find(x=>x.id===D.copymsg);copy(inviteText(g,personalLink(g)),'Message copied.');return}
-  if(D.copygroup!==undefined){copy(groupText(),'Group message copied.');return}
   if(D.copyform!==undefined){copy(S.meta.form_url||'','Form link copied.');return}
 });
 $('#addBtn').onclick=()=>{S.adding=S.adding==='__top'?null:'__top';renderTracker();setTimeout(()=>$('#newTop input')?.focus(),30)};
