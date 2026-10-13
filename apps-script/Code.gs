@@ -590,14 +590,14 @@ function uploadGuides_() {
   const dir = parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
   G.forEach(function (g) {
     const key = 'file_' + g.row.id + '_' + g.v;
-    let url = meta[key];
-    if (!url) {
+    let url = g.url || meta[key];
+    if (!url && g.b64) {
       const f = dir.createFile(Utilities.newBlob(Utilities.base64Decode(g.b64), 'application/pdf', g.name));
       f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
       url = f.getUrl();
       setMeta_(key, url);
     }
-    upsert_('Docs', Object.assign({}, g.row, { link: url }));
+    if (url) upsert_('Docs', Object.assign({}, g.row, { link: url }));
   });
 }
 
