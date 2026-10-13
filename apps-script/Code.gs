@@ -17,13 +17,23 @@ const FORM_DESC = 'You’re invited to the wedding of Yash & Anna at Fort Rajwad
   + 'Check-in: Saturday 30 January 2027, from 11 am\n'
   + 'Check-out: Monday 1 February 2027, after breakfast (time to be confirmed)\n\n'
   + 'Everyone on our guest list gets their own personal link. Please fill in this form just for yourself; it takes about 2 minutes.\n\n'
-  + 'Thank you! Yash & Anna';
+  + 'Thank you! Yash & Anna\n\n'
+  + '—\n\n'
+  + 'Приглашаем вас на свадьбу Яша и Анны в Форте Раджвада, Джайсалмер.\n\n'
+  + 'Заезд: суббота, 30 января 2027, с 11:00\n'
+  + 'Выезд: понедельник, 1 февраля 2027, после завтрака (время уточняется)\n\n'
+  + 'Каждый гость получает свою личную ссылку. Пожалуйста, заполните эту форму только за себя; это займёт около 2 минут.\n\n'
+  + 'Спасибо! Яш и Анна';
 /* Private values (phone numbers, task notes) live in LOCAL, which is only in the paste file, never in this repo. */
 function local_() { return (typeof LOCAL !== 'undefined') ? LOCAL : {}; }
 function idWa_() { return local_().id_whatsapp || 'Sparsh'; }
 function idEmail_() { return local_().id_email || ''; }
 function idSend_() { return 'WhatsApp it to Sparsh on ' + idWa_() + (idEmail_() ? ' or email it to ' + idEmail_() : ''); }
-function formThanks_() { return 'Thank you! We’ve got your details. Please remember to send a photo of your ID by 15 November: ' + idSend_() + '. See you in Jaisalmer! Yash & Anna'; }
+function idSendRu_() { return 'WhatsApp Спаршу: ' + idWa_() + (idEmail_() ? ', или на почту ' + idEmail_() : ''); }
+/** English first, Russian underneath (help text). */
+function enRu_(en, ru) { return en ? en + '\n\n' + ru : ru; }
+function formThanks_() { return 'Thank you! We’ve got your details. Please remember to send a photo of your ID by 15 November: ' + idSend_() + '. See you in Jaisalmer! Yash & Anna'
+  + '\n\nСпасибо! Мы получили ваши данные. Пожалуйста, не забудьте отправить фото документа до 15 ноября (' + idSendRu_() + '). До встречи в Джайсалмере! Яш и Анна'; }
 const Q = {
   name: 'Your name',
   others: 'Who this invitation is for',
@@ -337,7 +347,7 @@ FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
 const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'arrangement', 'form_at'];
-const FORM_VERSION = '10';
+const FORM_VERSION = '11';
 
 function createForm_() {
   const meta = meta_();
@@ -367,32 +377,37 @@ function buildForm_(f) {
     if (!codeIt && CODE_TITLES.indexOf(it.getTitle()) >= 0 && it.getType() === FormApp.ItemType.TEXT) codeIt = it;
     else f.deleteItem(it);
   });
-  f.addTextItem().setTitle(Q.idnames).setHelpText('For the hotel, spelt exactly as on your passport or ID.').setRequired(true);
-  f.addTextItem().setTitle(Q.phone).setHelpText('With country code, e.g. +44 7700 900123 or +91 98100 00000').setRequired(true);
-  f.addTextItem().setTitle(Q.email);
+  const REF_RU = 'Если ещё не забронировали, напишите «пока нет»; если едете сами, напишите «свой транспорт». Ответы можно изменить позже.';
+  f.addTextItem().setTitle(Q.idnames).setRequired(true)
+    .setHelpText(enRu_('For the hotel, spelt exactly as on your passport or ID.', 'Ваше полное имя, точно как в паспорте или документе (для отеля).'));
+  f.addTextItem().setTitle(Q.phone).setRequired(true)
+    .setHelpText(enRu_('With country code, e.g. +44 7700 900123 or +91 98100 00000', 'Телефон / WhatsApp с кодом страны, например +7 900 123 45 67'));
+  f.addTextItem().setTitle(Q.email).setRequired(true).setHelpText(enRu_('', 'Электронная почта'));
   f.addSectionHeaderItem().setTitle('Your travel')
-    .setHelpText('Airport and station transfers: pickups on Sat 30 Jan, drops on the morning of Mon 1 Feb.');
-  f.addMultipleChoiceItem().setTitle(Q.when).setRequired(true)
-    .setHelpText('Other days: no problem. We’ll share a few local cab contacts you can book directly.')
-    .setChoiceValues(['Yes', 'No, I’m arriving earlier or leaving later']);
-  f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true);
-  f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
-  f.addTimeItem().setTitle(Q.aTime);
-  f.addTextItem().setTitle(Q.aRef).setHelpText('If you have it already. You can come back and edit your answers.');
-  f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true);
-  f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues(['Air', 'Train', 'Own transport']).setRequired(true);
-  f.addTimeItem().setTitle(Q.dTime);
-  f.addTextItem().setTitle(Q.dRef);
-  f.addMultipleChoiceItem().setTitle(Q.diet).setChoiceValues(['Vegetarian', 'Jain (no onion, garlic or root vegetables)', 'Vegan', 'Non-vegetarian']).setRequired(true);
-  f.addCheckboxItem().setTitle(Q.id)
-    .setHelpText('The hotel needs a photo ID for every guest: passport and Indian visa from abroad; passport, Aadhaar or driving licence from India. '
-      + 'Please send a clear photo by 15 November 2026 (' + idSend_() + ') and bring the original with you.')
-    .setChoiceValues(['Got it. I’ll send my ID by 15 November']).setRequired(true);
-  f.addParagraphTextItem().setTitle(Q.notes).setHelpText('Accessibility needs, questions, anything at all');
-  f.addSectionHeaderItem().setTitle('For our records');
+    .setHelpText(enRu_('Transfers: pickups from Jaisalmer airport or station on Sat 30 Jan; drops on the morning of Mon 1 Feb. Arriving or leaving on another day? No problem: we’ll share a few local cab contacts you can book directly.',
+      'Ваша поездка. Трансфер: встречаем в аэропорту или на вокзале Джайсалмера в субботу, 30 января; отвозим утром в понедельник, 1 февраля. Приезжаете или уезжаете в другой день? Без проблем: мы пришлём контакты местных такси, которые можно заказать напрямую.'));
+  f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true).setHelpText(enRu_('', 'Дата приезда в Джайсалмер'));
+  f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues(['Air / Самолёт', 'Train / Поезд', 'Own transport / Свой транспорт']).setRequired(true).setHelpText(enRu_('', 'Как вы приедете'));
+  f.addTimeItem().setTitle(Q.aTime).setRequired(true).setHelpText(enRu_('', 'Время прибытия (примерно)'));
+  f.addTextItem().setTitle(Q.aRef).setRequired(true).setHelpText(enRu_('Type ‘not booked yet’ or ‘own transport’ if you don’t have one. You can come back and edit your answers.', 'Номер рейса или поезда. ' + REF_RU));
+  f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true).setHelpText(enRu_('', 'Дата отъезда из Джайсалмера'));
+  f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues(['Air / Самолёт', 'Train / Поезд', 'Own transport / Свой транспорт']).setRequired(true).setHelpText(enRu_('', 'Как вы уедете'));
+  f.addTimeItem().setTitle(Q.dTime).setRequired(true).setHelpText(enRu_('', 'Время отъезда (примерно)'));
+  f.addTextItem().setTitle(Q.dRef).setRequired(true).setHelpText(enRu_('Type ‘not booked yet’ or ‘own transport’ if you don’t have one. You can come back and edit your answers.', 'Номер рейса или поезда при отъезде. ' + REF_RU));
+  f.addMultipleChoiceItem().setTitle(Q.diet).setRequired(true).setHelpText(enRu_('', 'Предпочтения в еде'))
+    .setChoiceValues(['Vegetarian / Вегетарианское', 'Jain (no onion, garlic or root vegetables) / Джайнское (без лука, чеснока и корнеплодов)', 'Vegan / Веганское', 'Non-vegetarian / С мясом']);
+  f.addCheckboxItem().setTitle(Q.id).setRequired(true)
+    .setHelpText(enRu_('The hotel needs a photo ID for every guest: passport and Indian visa from abroad; passport, Aadhaar or driving licence from India. '
+      + 'Please send a clear photo by 15 November 2026 (' + idSend_() + ') and bring the original with you.',
+      'Фото документа для заселения. Отелю нужен документ каждого гостя: для гостей из-за границы это паспорт и индийская виза. Пожалуйста, отправьте чёткое фото до 15 ноября 2026 (' + idSendRu_() + ') и возьмите оригинал с собой.'))
+    .setChoiceValues(['Got it. I’ll send my ID by 15 November / Понятно. Отправлю до 15 ноября']);
+  f.addParagraphTextItem().setTitle(Q.notes)
+    .setHelpText(enRu_('Accessibility needs, questions, anything at all', 'Что-нибудь ещё, что нам стоит знать? Особые потребности, вопросы, что угодно.'));
+  f.addSectionHeaderItem().setTitle('For our records').setHelpText('Для наших записей');
   const code = codeIt ? codeIt.asTextItem() : f.addTextItem();
-  code.setTitle(Q.code).setHelpText('Filled in by your personal link. Please leave it as it is.').setRequired(true)
-    .setValidation(FormApp.createTextValidation().setHelpText('Please open the form from the personal link we sent you.').requireTextMatchesPattern('^g[0-9]{3}$').build());
+  code.setTitle(Q.code).setRequired(true)
+    .setHelpText(enRu_('Filled in by your personal link. Please leave it as it is.', 'Заполняется по вашей личной ссылке. Пожалуйста, не меняйте.'))
+    .setValidation(FormApp.createTextValidation().setHelpText('Please open the form from the personal link we sent you. / Пожалуйста, откройте форму по личной ссылке, которую мы прислали.').requireTextMatchesPattern('^g[0-9]{3}$').build());
   f.moveItem(code.getIndex(), f.getItems().length - 1);
 }
 
@@ -420,6 +435,7 @@ function onTravelForm(e) {
       let v = r.getResponse();
       if (Array.isArray(v)) v = v.join(', ');
       a[k] = String(v == null ? '' : v).trim();
+      if (/[А-Яа-яЁё]/.test(a[k]) && a[k].indexOf(' / ') > 0) a[k] = a[k].split(' / ')[0].trim();
     });
     if (a.pickup) a.pickup = /^yes/i.test(a.pickup) ? 'yes' : 'no';
     if (a.drop) a.drop = /^yes/i.test(a.drop) ? 'yes' : 'no';
@@ -427,8 +443,10 @@ function onTravelForm(e) {
     // Hotel transfers only on 30 Jan (arrivals) and 1 Feb (departures), by air or train.
     if (a.arrive_date) a.pickup = (a.arrive_date === '2027-01-30' && a.arrive_mode !== 'Own transport') ? 'yes' : 'no';
     if (a.depart_date) a.drop = (a.depart_date === '2027-02-01' && a.depart_mode !== 'Own transport') ? 'yes' : 'no';
+    // Arriving or leaving on another day (not by own transport): they'll want a few local cab contacts.
+    if ((a.arrive_date && a.arrive_date !== '2027-01-30' && a.arrive_mode !== 'Own transport') || (a.depart_date && a.depart_date !== '2027-02-01' && a.depart_mode !== 'Own transport')) a.drivers = 'cab contacts';
     if (a.id_status) a.id_status = 'promised';
-    if (a.drivers) a.drivers = 'send list';
+    if (a.drivers && a.drivers !== 'cab contacts') a.drivers = 'send list';
     if (a.other_days) { if (/^no/i.test(a.other_days)) a.drivers = 'cab contacts'; delete a.other_days; }
     if (a.arrangement) a.arrangement = /^yes/i.test(a.arrangement) ? 'confirmed' : 'not right';
     if (!a.name && a.id_names) a.name = a.id_names;
