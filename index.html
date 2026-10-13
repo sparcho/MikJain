@@ -981,7 +981,7 @@ The three guides are attached. Please fill in the registration by *${DEADLINE}*.
 ${link}
 
 Any questions, just reply here. See you in Jaisalmer!`;
-const PACK=[['Travel_and_Stay_v6.pdf','Travel & Stay guide'],['Attire_Guide_Women_v4.pdf','Outfit guide · Ladies'],['Attire_Guide_Men_v4.pdf','Outfit guide · Gents']];
+const PACK=[['Travel_and_Stay_Oct.pdf','Travel & Stay guide'],['Attire_Guide_Women_Oct.pdf','Outfit guide · Ladies'],['Attire_Guide_Men_Oct.pdf','Outfit guide · Gents']];
 const waLink=phone=>{const d=String(phone||'').replace(/[^\d]/g,'');return d.length>=8?`https://wa.me/${d}`:''};
 async function copy(text,label){try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.append(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove()}toast(label||'Copied.')}
 function gFiltered(){const q=S.g.q.trim().toLowerCase();return S.guests.filter(g=>(!S.g.list||g.list===S.g.list)&&(!q||`${g.name} ${g.group} ${g.list} ${g.from_city} ${g.party_names} ${g.notes} ${g.room_block}`.toLowerCase().includes(q)))}
@@ -1099,7 +1099,7 @@ function renderGuests(){
       <div><p class="caps" style="margin-bottom:10px">How to send <span class="q" tabindex="0" data-tip="Keep the HQ, WhatsApp and the guides folder open side by side, then work down the list.">?</span></p><ol class="sendsteps">
         <li>Open a name below and press <b>Copy message</b>.</li>
         <li>Press <b>Open WhatsApp chat</b> (or find them in WhatsApp) and paste.</li>
-        <li>Drag in the three guides from <code>05_GUEST_GUIDES/PACK_v4</code> (Russian speakers: the <code>RU</code> folder).<ul>${PACK.map(([f,t])=>`<li>${esc(t)} <span class="caps">${esc(f)}</span></li>`).join('')}</ul></li>
+        <li>Drag in the three guides from <code>05_GUEST_GUIDES/PACK_v4</code> (Russian speakers: the same three from the <code>RU</code> folder).<ul>${PACK.map(([f,t])=>`<li>${esc(t)} <span class="caps">${esc(f)}</span></li>`).join('')}</ul></li>
         <li>Send, then press <b>Mark sent</b>.</li></ol>
         <p class="caps" style="margin:22px 0 10px">The message</p><div class="msgbox">${esc(inviteText({name:'Name'},'[their personal link]')).replace(/\*([^*\n]+)\*/g,'<b>$1</b>')}</div></div></div>
       ${chapter('f:unsent','Link not <i>sent</i>',`<span class="c-open">${unsent.length} invitations</span>`,unsent.map(unitRow).join(''),0)}
