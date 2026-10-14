@@ -971,18 +971,21 @@ const enOnly=g=>EN_ONLY_LISTS.includes(g.list);
 function personalLink(g){const m=S.meta;if(enOnly(g)){if(!m.form_url_en||!m.form_entry_code_en)return'';const u=m.form_url_en;return u+(u.includes('?')?'&':'?')+`usp=pp_url&entry.${m.form_entry_code_en}=${encodeURIComponent(g.id)}`}if(!m.form_url)return'';const o=onInvite(g).filter(x=>x.id!==g.id).map(x=>x.name),pn=(()=>{const all=[g.name,...o],n=all.length;return n===1?`${g.name} only (1 guest)`:`${all.slice(0,-1).join(', ')} and ${all[n-1]} (${n} guests, ${n===2?'sharing a room':'staying together'})`})();let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
   if(m.form_entry_name)u+=`&entry.${m.form_entry_name}=${encodeURIComponent(g.name)}`;if(m.form_entry_others)u+=`&entry.${m.form_entry_others}=${encodeURIComponent(pn)}`;if(m.form_entry_code)u+=`&entry.${m.form_entry_code}=${encodeURIComponent(g.id)}`;return u}
 const DEADLINE='25 October';
-const inviteText=(g,link)=>`Hi ${first(g.name)}! Yash & Anna’s wedding is coming up: Sat 30 & Sun 31 January 2027 at Fort Rajwada, Jaisalmer. Here’s everything you need to plan your trip:
+const inviteText=(g,link)=>`Hi ${first(g.name)}!
 
-1. *Guest registration*: your own personal link below (just for you; it takes about 2 minutes)
-2. *Travel & Stay guide*: dates, getting to Jaisalmer, the hotel and photo ID
-3. *Outfit guide · Ladies*: what to wear to each event
-4. *Outfit guide · Gents*: the same for the men
+Yash & Anna’s wedding is almost here, and we’re so excited to celebrate with you at Fort Rajwada, Jaisalmer, on Sat 30 & Sun 31 January.
 
-The three guides are attached. Please fill in the registration by *${DEADLINE}*.
+To help you plan your trip, here’s everything in one place:
+
+1. *Your registration form*: your own personal link is below. It takes about 2 minutes and helps us get your room, pickup and meals just right.
+2. *Travel & Stay guide* (attached): getting to Jaisalmer, the hotel and photo ID
+3. *Outfit guides, Ladies and Gents* (attached): what to wear to each celebration
+
+Could you please fill in the form by *${DEADLINE}*?
 
 ${link}
 
-Any questions, just reply here. See you in Jaisalmer!`;
+If you have any questions at all, just message me here. We can’t wait to see you in Jaisalmer!`;
 const PACK=[['Yash & Anna - Travel & Stay.pdf','Travel & Stay guide'],['Yash & Anna - Outfit Guide (Ladies).pdf','Outfit guide · Ladies'],['Yash & Anna - Outfit Guide (Gents).pdf','Outfit guide · Gents']];
 const waLink=phone=>{const d=String(phone||'').replace(/[^\d]/g,'');return d.length>=8?`https://wa.me/${d}`:''};
 async function copy(text,label){try{await navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.append(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove()}toast(label||'Copied.')}

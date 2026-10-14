@@ -13,16 +13,18 @@ const TOKEN_DAYS = 45;
 const TZ = 'Asia/Kolkata';
 const TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const FORM_TITLE = 'Yash & Anna · Jaisalmer · Guest registration';
-const FORM_DESC_EN = 'You’re invited to the wedding of Yash & Anna at Fort Rajwada, Jaisalmer.\n\n'
+const FORM_DESC_EN = 'Yash & Anna are getting married, and it would mean the world to them to have you there.\n\n'
+  + 'Join us at Fort Rajwada, Jaisalmer, for two days of colour, music and celebration.\n\n'
   + 'Check-in: Saturday 30 January 2027, from 11 am\n'
   + 'Check-out: Monday 1 February 2027, after breakfast (time to be confirmed)\n\n'
-  + 'Everyone on our guest list gets their own personal link. Please fill in this form just for yourself; it takes about 2 minutes.\n\n'
-  + 'Thank you! Yash & Anna';
-const FORM_DESC_RU = 'Приглашаем вас на свадьбу Яша и Анны в Форте Раджвада, Джайсалмер.\n\n'
+  + 'This short form helps us get your room, pickup and meals just right. Everyone has their own personal link, so please fill it in just for yourself; it takes about 2 minutes.\n\n'
+  + 'With love,\nYash & Anna';
+const FORM_DESC_RU = 'Яш и Анна женятся, и для них очень важно, чтобы вы были рядом в этот день.\n\n'
+  + 'Приглашаем вас в Форт Раджвада, Джайсалмер, на два дня красок, музыки и праздника.\n\n'
   + 'Заезд: суббота, 30 января 2027, с 11:00\n'
   + 'Выезд: понедельник, 1 февраля 2027, после завтрака (время уточняется)\n\n'
-  + 'Каждый гость получает свою личную ссылку. Пожалуйста, заполните эту форму только за себя; это займёт около 2 минут.\n\n'
-  + 'Спасибо! Яш и Анна';
+  + 'Эта короткая форма поможет нам подготовить для вас номер, встречу и питание. У каждого гостя своя личная ссылка, поэтому, пожалуйста, заполните форму только за себя; это займёт около 2 минут.\n\n'
+  + 'С любовью,\nЯш и Анна';
 const FORM_DESC = FORM_DESC_EN + '\n\n—\n\n' + FORM_DESC_RU;
 /** Guests on these Vedding lists get the English-only copy of the form (Sparsh, 14 Oct 26). Everyone else: English + Russian. */
 const EN_ONLY_LISTS = ['Sparsh', 'Rajiv & Shalini'];
@@ -354,7 +356,24 @@ FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
 const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'arrangement', 'form_at'];
-const FORM_VERSION = '11';
+const FORM_VERSION = '12';
+/** Half-hour time choices in 12-hour format (KV, 14 Oct 26: no 24-hour clock). The bilingual form adds the 24-hour time in brackets for Russian guests. */
+function timeChoices_() {
+  const out = [];
+  for (let m = 0; m < 24 * 60; m += 30) {
+    const h = Math.floor(m / 60), mm = ('0' + (m % 60)).slice(-2), h12 = (h % 12) || 12;
+    const t = h12 + ':' + mm + ' ' + (h < 12 ? 'AM' : 'PM');
+    out.push(FORM_LANG === 'en' ? t : t + ' (' + ('0' + h).slice(-2) + ':' + mm + ')');
+  }
+  return out;
+}
+/** '2:30 PM' or '2:30 PM (14:30)' → '14:30' (the HQ stores 24-hour times). Anything else is kept as typed. */
+function to24_(v) {
+  const m = String(v || '').match(/^(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!m) return v;
+  let h = Number(m[1]) % 12; if (/pm/i.test(m[3])) h += 12;
+  return ('0' + h).slice(-2) + ':' + m[2];
+}
 
 function createForm_() {
   const meta = meta_();
@@ -400,19 +419,19 @@ function buildFormItems_(f) {
       'Ваша поездка. Трансфер: встречаем в аэропорту или на вокзале Джайсалмера в субботу, 30 января; отвозим утром в понедельник, 1 февраля. Приезжаете или уезжаете в другой день? Без проблем: мы пришлём контакты местных такси, которые можно заказать напрямую.'));
   f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true).setHelpText(enRu_('', 'Дата приезда в Джайсалмер'));
   f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues([bi_('Air', 'Самолёт'), bi_('Train', 'Поезд'), bi_('Own transport', 'Свой транспорт')]).setRequired(true).setHelpText(enRu_('', 'Как вы приедете'));
-  f.addTimeItem().setTitle(Q.aTime).setRequired(true).setHelpText(enRu_('', 'Время прибытия (примерно)'));
+  f.addListItem().setTitle(Q.aTime).setChoiceValues(timeChoices_()).setRequired(true).setHelpText(enRu_('', 'Время прибытия (примерно)'));
   f.addTextItem().setTitle(Q.aRef).setRequired(true).setHelpText(enRu_('Type ‘not booked yet’ or ‘own transport’ if you don’t have one. You can come back and edit your answers.', 'Номер рейса или поезда. ' + REF_RU));
   f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true).setHelpText(enRu_('', 'Дата отъезда из Джайсалмера'));
   f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues([bi_('Air', 'Самолёт'), bi_('Train', 'Поезд'), bi_('Own transport', 'Свой транспорт')]).setRequired(true).setHelpText(enRu_('', 'Как вы уедете'));
-  f.addTimeItem().setTitle(Q.dTime).setRequired(true).setHelpText(enRu_('', 'Время отъезда (примерно)'));
+  f.addListItem().setTitle(Q.dTime).setChoiceValues(timeChoices_()).setRequired(true).setHelpText(enRu_('', 'Время отъезда (примерно)'));
   f.addTextItem().setTitle(Q.dRef).setRequired(true).setHelpText(enRu_('Type ‘not booked yet’ or ‘own transport’ if you don’t have one. You can come back and edit your answers.', 'Номер рейса или поезда при отъезде. ' + REF_RU));
   f.addMultipleChoiceItem().setTitle(Q.diet).setRequired(true).setHelpText(enRu_('', 'Предпочтения в еде'))
     .setChoiceValues([bi_('Vegetarian', 'Вегетарианское'), bi_('Jain (no onion, garlic or root vegetables)', 'Джайнское (без лука, чеснока и корнеплодов)'), bi_('Vegan', 'Веганское'), bi_('Non-vegetarian', 'С мясом')]);
   f.addCheckboxItem().setTitle(Q.id).setRequired(true)
-    .setHelpText(enRu_('The hotel needs a photo ID for every guest: passport and Indian visa from abroad; passport, Aadhaar or driving licence from India. '
+    .setHelpText(enRu_('The hotel needs a photo ID for every guest. Non-Indian citizens: passport and Indian visa. Indian citizens: passport, Aadhaar or driving licence. '
       + 'Please send a clear photo by 15 November 2026 (' + idSend_() + ') and bring the original with you.',
-      'Фото документа для заселения. Отелю нужен документ каждого гостя: для гостей из-за границы это паспорт и индийская виза. Пожалуйста, отправьте чёткое фото до 15 ноября 2026 (' + idSendRu_() + ') и возьмите оригинал с собой.'))
-    .setChoiceValues([bi_('Got it. I’ll send my ID by 15 November', 'Понятно. Отправлю до 15 ноября')]);
+      'Фото документа для заселения. Отелю нужен документ с фото для каждого гостя. Для граждан других стран (не Индии): паспорт и индийская виза. Пожалуйста, отправьте чёткое фото до 15 ноября 2026 (' + idSendRu_() + ') и возьмите оригинал с собой.'))
+    .setChoiceValues([bi_('Understood. I’ll send my ID by 15 November', 'Понятно. Отправлю до 15 ноября')]);
   f.addParagraphTextItem().setTitle(Q.notes)
     .setHelpText(enRu_('Accessibility needs, questions, anything at all', 'Что-нибудь ещё, что нам стоит знать? Особые потребности, вопросы, что угодно.'));
   f.addSectionHeaderItem().setTitle('For our records').setHelpText(enRu_('', 'Для наших записей'));
@@ -486,6 +505,8 @@ function onTravelForm(e) {
     if (a.pickup) a.pickup = /^yes/i.test(a.pickup) ? 'yes' : 'no';
     if (a.drop) a.drop = /^yes/i.test(a.drop) ? 'yes' : 'no';
     if (a.diet) a.diet = a.diet.split(' (')[0];
+    if (a.arrive_time) a.arrive_time = to24_(a.arrive_time);
+    if (a.depart_time) a.depart_time = to24_(a.depart_time);
     // Hotel transfers only on 30 Jan (arrivals) and 1 Feb (departures), by air or train.
     if (a.arrive_date) a.pickup = (a.arrive_date === '2027-01-30' && a.arrive_mode !== 'Own transport') ? 'yes' : 'no';
     if (a.depart_date) a.drop = (a.depart_date === '2027-02-01' && a.depart_mode !== 'Own transport') ? 'yes' : 'no';
