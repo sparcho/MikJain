@@ -13,17 +13,22 @@ const TOKEN_DAYS = 45;
 const TZ = 'Asia/Kolkata';
 const TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const FORM_TITLE = 'Yash & Anna · Jaisalmer · Guest registration';
-const FORM_DESC = 'You’re invited to the wedding of Yash & Anna at Fort Rajwada, Jaisalmer.\n\n'
+const FORM_DESC_EN = 'You’re invited to the wedding of Yash & Anna at Fort Rajwada, Jaisalmer.\n\n'
   + 'Check-in: Saturday 30 January 2027, from 11 am\n'
   + 'Check-out: Monday 1 February 2027, after breakfast (time to be confirmed)\n\n'
   + 'Everyone on our guest list gets their own personal link. Please fill in this form just for yourself; it takes about 2 minutes.\n\n'
-  + 'Thank you! Yash & Anna\n\n'
-  + '—\n\n'
-  + 'Приглашаем вас на свадьбу Яша и Анны в Форте Раджвада, Джайсалмер.\n\n'
+  + 'Thank you! Yash & Anna';
+const FORM_DESC_RU = 'Приглашаем вас на свадьбу Яша и Анны в Форте Раджвада, Джайсалмер.\n\n'
   + 'Заезд: суббота, 30 января 2027, с 11:00\n'
   + 'Выезд: понедельник, 1 февраля 2027, после завтрака (время уточняется)\n\n'
   + 'Каждый гость получает свою личную ссылку. Пожалуйста, заполните эту форму только за себя; это займёт около 2 минут.\n\n'
   + 'Спасибо! Яш и Анна';
+const FORM_DESC = FORM_DESC_EN + '\n\n—\n\n' + FORM_DESC_RU;
+/** Guests on these Vedding lists get the English-only copy of the form (Sparsh, 14 Oct 26). Everyone else: English + Russian. */
+const EN_ONLY_LISTS = ['Sparsh', 'Rajiv & Shalini'];
+/** 'both' = English + Russian; 'en' = English only. Set by buildForm_ while a form is being built. */
+let FORM_LANG = 'both';
+function formDesc_() { return FORM_LANG === 'en' ? FORM_DESC_EN : FORM_DESC; }
 /* Private values (phone numbers, task notes) live in LOCAL, which is only in the paste file, never in this repo. */
 function local_() { return (typeof LOCAL !== 'undefined') ? LOCAL : {}; }
 function idWa_() { return local_().id_whatsapp || 'Sparsh'; }
@@ -31,9 +36,11 @@ function idEmail_() { return local_().id_email || ''; }
 function idSend_() { return 'WhatsApp it to Sparsh on ' + idWa_() + (idEmail_() ? ' or email it to ' + idEmail_() : ''); }
 function idSendRu_() { return 'WhatsApp Спаршу: ' + idWa_() + (idEmail_() ? ', или на почту ' + idEmail_() : ''); }
 /** English first, Russian underneath (help text). */
-function enRu_(en, ru) { return en ? en + '\n\n' + ru : ru; }
-function formThanks_() { return 'Thank you! We’ve got your details. Please remember to send a photo of your ID by 15 November: ' + idSend_() + '. See you in Jaisalmer! Yash & Anna'
-  + '\n\nСпасибо! Мы получили ваши данные. Пожалуйста, не забудьте отправить фото документа до 15 ноября (' + idSendRu_() + '). До встречи в Джайсалмере! Яш и Анна'; }
+function enRu_(en, ru) { if (FORM_LANG === 'en') return en || ''; return en ? en + '\n\n' + ru : ru; }
+/** Choice and short-label text: 'English / Русский', or English only on the English form. */
+function bi_(en, ru) { return FORM_LANG === 'en' ? en : en + ' / ' + ru; }
+function formThanks_() { const en = 'Thank you! We’ve got your details. Please remember to send a photo of your ID by 15 November: ' + idSend_() + '. See you in Jaisalmer! Yash & Anna';
+  return FORM_LANG === 'en' ? en : en + '\n\nСпасибо! Мы получили ваши данные. Пожалуйста, не забудьте отправить фото документа до 15 ноября (' + idSendRu_() + '). До встречи в Джайсалмере! Яш и Анна'; }
 const Q = {
   name: 'Your name',
   others: 'Who this invitation is for',
@@ -238,7 +245,7 @@ function bundle_(u) {
   const meta = meta_();
   const pub = {};
   Object.keys(meta).forEach(function (k) { if (k.indexOf('source_') !== 0 && k.indexOf('form_edit') !== 0 && k.indexOf('form_entry') !== 0) pub[k] = meta[k]; });
-  if (u.role !== 'viewer') pub.form_entry_name = meta.form_entry_name || '', pub.form_entry_code = meta.form_entry_code || '', pub.form_entry_others = meta.form_entry_others || '';
+  if (u.role !== 'viewer') pub.form_entry_name = meta.form_entry_name || '', pub.form_entry_code = meta.form_entry_code || '', pub.form_entry_others = meta.form_entry_others || '', pub.form_entry_code_en = meta.form_entry_code_en || '';
   const days = {};
   read_('Programme').forEach(function (r) {
     const d = days[r.day_id] || (days[r.day_id] = { id: r.day_id, order: Number(r.day_order), label: r.day_label, title: r.day_title, note: r.day_note, items: [] });
@@ -355,7 +362,8 @@ function createForm_() {
   const f = FormApp.create(FORM_TITLE);
   buildForm_(f);
   f.setDestination(FormApp.DestinationType.SPREADSHEET, ss_().getId());
-  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'onTravelForm') ScriptApp.deleteTrigger(t); });
+  const enId = meta.form_id_en;
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'onTravelForm' && t.getTriggerSourceId() !== enId) ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('onTravelForm').forForm(f).onFormSubmit().create();
   setMeta_('form_id', f.getId());
   setMeta_('form_url', f.getPublishedUrl());
@@ -367,8 +375,12 @@ function createForm_() {
 
 /** One-page guest registration (Dad's questions, Tauji's wording, 11 Oct 26). Keeps the name and code
  *  questions (renamed) so existing personal links keep working; everything else is rebuilt. */
-function buildForm_(f) {
-  f.setTitle(FORM_TITLE).setDescription(FORM_DESC).setConfirmationMessage(formThanks_());
+function buildForm_(f, lang) {
+  FORM_LANG = lang || 'both';
+  try { buildFormItems_(f); } finally { FORM_LANG = 'both'; }
+}
+function buildFormItems_(f) {
+  f.setTitle(FORM_TITLE).setDescription(formDesc_()).setConfirmationMessage(formThanks_());
   f.setCollectEmail(false).setAllowResponseEdits(true).setShowLinkToRespondAgain(false).setProgressBar(false);
   // Name is asked once (as on the ID). The guest reference, filled in by the personal link, sits at the end; it is how a reply finds its guest.
   let codeIt = null;
@@ -387,41 +399,75 @@ function buildForm_(f) {
     .setHelpText(enRu_('Transfers: pickups from Jaisalmer airport or station on Sat 30 Jan; drops on the morning of Mon 1 Feb. Arriving or leaving on another day? No problem: we’ll share a few local cab contacts you can book directly.',
       'Ваша поездка. Трансфер: встречаем в аэропорту или на вокзале Джайсалмера в субботу, 30 января; отвозим утром в понедельник, 1 февраля. Приезжаете или уезжаете в другой день? Без проблем: мы пришлём контакты местных такси, которые можно заказать напрямую.'));
   f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true).setHelpText(enRu_('', 'Дата приезда в Джайсалмер'));
-  f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues(['Air / Самолёт', 'Train / Поезд', 'Own transport / Свой транспорт']).setRequired(true).setHelpText(enRu_('', 'Как вы приедете'));
+  f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues([bi_('Air', 'Самолёт'), bi_('Train', 'Поезд'), bi_('Own transport', 'Свой транспорт')]).setRequired(true).setHelpText(enRu_('', 'Как вы приедете'));
   f.addTimeItem().setTitle(Q.aTime).setRequired(true).setHelpText(enRu_('', 'Время прибытия (примерно)'));
   f.addTextItem().setTitle(Q.aRef).setRequired(true).setHelpText(enRu_('Type ‘not booked yet’ or ‘own transport’ if you don’t have one. You can come back and edit your answers.', 'Номер рейса или поезда. ' + REF_RU));
   f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true).setHelpText(enRu_('', 'Дата отъезда из Джайсалмера'));
-  f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues(['Air / Самолёт', 'Train / Поезд', 'Own transport / Свой транспорт']).setRequired(true).setHelpText(enRu_('', 'Как вы уедете'));
+  f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues([bi_('Air', 'Самолёт'), bi_('Train', 'Поезд'), bi_('Own transport', 'Свой транспорт')]).setRequired(true).setHelpText(enRu_('', 'Как вы уедете'));
   f.addTimeItem().setTitle(Q.dTime).setRequired(true).setHelpText(enRu_('', 'Время отъезда (примерно)'));
   f.addTextItem().setTitle(Q.dRef).setRequired(true).setHelpText(enRu_('Type ‘not booked yet’ or ‘own transport’ if you don’t have one. You can come back and edit your answers.', 'Номер рейса или поезда при отъезде. ' + REF_RU));
   f.addMultipleChoiceItem().setTitle(Q.diet).setRequired(true).setHelpText(enRu_('', 'Предпочтения в еде'))
-    .setChoiceValues(['Vegetarian / Вегетарианское', 'Jain (no onion, garlic or root vegetables) / Джайнское (без лука, чеснока и корнеплодов)', 'Vegan / Веганское', 'Non-vegetarian / С мясом']);
+    .setChoiceValues([bi_('Vegetarian', 'Вегетарианское'), bi_('Jain (no onion, garlic or root vegetables)', 'Джайнское (без лука, чеснока и корнеплодов)'), bi_('Vegan', 'Веганское'), bi_('Non-vegetarian', 'С мясом')]);
   f.addCheckboxItem().setTitle(Q.id).setRequired(true)
     .setHelpText(enRu_('The hotel needs a photo ID for every guest: passport and Indian visa from abroad; passport, Aadhaar or driving licence from India. '
       + 'Please send a clear photo by 15 November 2026 (' + idSend_() + ') and bring the original with you.',
       'Фото документа для заселения. Отелю нужен документ каждого гостя: для гостей из-за границы это паспорт и индийская виза. Пожалуйста, отправьте чёткое фото до 15 ноября 2026 (' + idSendRu_() + ') и возьмите оригинал с собой.'))
-    .setChoiceValues(['Got it. I’ll send my ID by 15 November / Понятно. Отправлю до 15 ноября']);
+    .setChoiceValues([bi_('Got it. I’ll send my ID by 15 November', 'Понятно. Отправлю до 15 ноября')]);
   f.addParagraphTextItem().setTitle(Q.notes)
     .setHelpText(enRu_('Accessibility needs, questions, anything at all', 'Что-нибудь ещё, что нам стоит знать? Особые потребности, вопросы, что угодно.'));
-  f.addSectionHeaderItem().setTitle('For our records').setHelpText('Для наших записей');
+  f.addSectionHeaderItem().setTitle('For our records').setHelpText(enRu_('', 'Для наших записей'));
   const code = codeIt ? codeIt.asTextItem() : f.addTextItem();
   code.setTitle(Q.code).setRequired(true)
     .setHelpText(enRu_('Filled in by your personal link. Please leave it as it is.', 'Заполняется по вашей личной ссылке. Пожалуйста, не меняйте.'))
-    .setValidation(FormApp.createTextValidation().setHelpText('Please open the form from the personal link we sent you. / Пожалуйста, откройте форму по личной ссылке, которую мы прислали.').requireTextMatchesPattern('^g[0-9]{3}$').build());
+    .setValidation(FormApp.createTextValidation().setHelpText(bi_('Please open the form from the personal link we sent you.', 'Пожалуйста, откройте форму по личной ссылке, которую мы прислали.')).requireTextMatchesPattern('^g[0-9]{3}$').build());
   f.moveItem(code.getIndex(), f.getItems().length - 1);
 }
 
 /** Saves the pre-fill entry ids (name, others on the invitation, code) used by personal links. */
-function formEntries_(f) {
+function formEntries_(f, sfx) {
+  sfx = sfx || '';
   const ids = {};
   f.getItems().forEach(function (it) { ids[it.getTitle()] = it.getId(); });
   const pre = f.createResponse();
   pre.withItemResponse(f.getItemById(ids[Q.code]).asTextItem().createResponse('__CODE__'));
   const url = pre.toPrefilledUrl();
   const m1 = url.match(/entry\.(\d+)=__NAME__/), m2 = url.match(/entry\.(\d+)=__CODE__/), m3 = url.match(/entry\.(\d+)=__OTHERS__/);
-  setMeta_('form_entry_name', m1 ? m1[1] : '');
-  if (m2) setMeta_('form_entry_code', m2[1]);
+  if (!sfx) setMeta_('form_entry_name', m1 ? m1[1] : '');
+  if (m2) setMeta_('form_entry_code' + sfx, m2[1]);
+  if (sfx) return;
   setMeta_('form_entry_others', '');
+}
+
+/** The English-only copy of the registration form (same questions, same sheet, same reply handler). Safe to re-run. */
+function ensureEnglishForm_() {
+  const meta = meta_();
+  let f = null;
+  if (meta.form_id_en) { try { f = FormApp.openById(meta.form_id_en); } catch (e) { f = null; } }
+  if (!f) {
+    f = FormApp.create(FORM_TITLE);
+    buildForm_(f, 'en');
+    f.setDestination(FormApp.DestinationType.SPREADSHEET, ss_().getId());
+    try {
+      const file = DriveApp.getFileById(f.getId());
+      file.setName(FORM_TITLE + ' (English only)');
+      const parents = DriveApp.getFileById(ss_().getId()).getParents();
+      if (parents.hasNext()) file.moveTo(parents.next());
+    } catch (e) { Logger.log('English form file: ' + e); }
+    setMeta_('form_id_en', f.getId());
+    setMeta_('form_url_en', f.getPublishedUrl());
+    setMeta_('form_edit_url_en', f.getEditUrl());
+    formEntries_(f, '_en');
+    setMeta_('form_v_en', FORM_VERSION);
+  } else if (meta.form_v_en !== FORM_VERSION) {
+    buildForm_(f, 'en'); formEntries_(f, '_en'); setMeta_('form_v_en', FORM_VERSION);
+  } else {
+    FORM_LANG = 'en';
+    try { f.setTitle(FORM_TITLE).setDescription(formDesc_()).setConfirmationMessage(formThanks_()); } finally { FORM_LANG = 'both'; }
+  }
+  const id = f.getId();
+  if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'onTravelForm' && t.getTriggerSourceId() === id; })) {
+    ScriptApp.newTrigger('onTravelForm').forForm(f).onFormSubmit().create();
+  }
 }
 
 /** Trigger: copies each travel-form reply onto the matching guest (by code, else by name). */
@@ -549,6 +595,7 @@ function migrate_() {
   if (meta.form_id && meta.form_v !== FORM_VERSION) {
     try { const f = FormApp.openById(meta.form_id); buildForm_(f); formEntries_(f); setMeta_('form_v', FORM_VERSION); } catch (e) { Logger.log('Form rebuild: ' + e); }
   }
+  try { ensureEnglishForm_(); } catch (e) { Logger.log('English form: ' + e); }
   try { syncVedding_(); } catch (e) { Logger.log('Vedding sync: ' + e); }
   if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncVedding'; })) ScriptApp.newTrigger('syncVedding').timeBased().everyHours(6).create();
   fixWeekdays_();
