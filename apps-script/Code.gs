@@ -13,18 +13,18 @@ const TOKEN_DAYS = 45;
 const TZ = 'Asia/Kolkata';
 const TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const FORM_TITLE = 'Yash & Anna · Jaisalmer · Guest registration';
-const FORM_DESC_EN = 'Yash & Anna are getting married, and it would mean the world to them to have you there.\n\n'
-  + 'Join us at Fort Rajwada, Jaisalmer, for two days of colour, music and celebration.\n\n'
-  + 'Check-in: Saturday 30 January 2027, from 11 am\n'
-  + 'Check-out: Monday 1 February 2027, after breakfast (time to be confirmed)\n\n'
+const FORM_DESC_EN = 'The big day is just around the corner: Yash & Anna are getting married! (Again.) It would mean the world to them to have you there.\n\n'
+  + 'Join us at Fort Rajwada, Jaisalmer, for two days of love, colour and celebration.\n\n'
+  + 'Check-in: Saturday 30 Jan 2027, from 11 AM\n'
+  + 'Check-out: Monday 1 Feb 2027, 10 AM\n\n'
   + 'This short form helps us get your room, pickup and meals just right. Everyone has their own personal link, so please fill it in just for yourself; it takes about 2 minutes.\n\n'
-  + 'With love,\nYash & Anna';
-const FORM_DESC_RU = 'Яш и Анна женятся, и для них очень важно, чтобы вы были рядом в этот день.\n\n'
-  + 'Приглашаем вас в Форт Раджвада, Джайсалмер, на два дня красок, музыки и праздника.\n\n'
+  + 'With love,\nTeam MikJain';
+const FORM_DESC_RU = 'Совсем скоро большой день: Яш и Анна женятся! (Ещё раз.) Для них очень важно, чтобы вы были рядом.\n\n'
+  + 'Приглашаем вас в Форт Раджвада, Джайсалмер, на два дня любви, красок и праздника.\n\n'
   + 'Заезд: суббота, 30 января 2027, с 11:00\n'
-  + 'Выезд: понедельник, 1 февраля 2027, после завтрака (время уточняется)\n\n'
+  + 'Выезд: понедельник, 1 февраля 2027, в 10:00\n\n'
   + 'Эта короткая форма поможет нам подготовить для вас номер, встречу и питание. У каждого гостя своя личная ссылка, поэтому, пожалуйста, заполните форму только за себя; это займёт около 2 минут.\n\n'
-  + 'С любовью,\nЯш и Анна';
+  + 'С любовью,\nКоманда MikJain';
 const FORM_DESC = FORM_DESC_EN + '\n\n—\n\n' + FORM_DESC_RU;
 /** Guests on these Vedding lists get the English-only copy of the form (Sparsh, 14 Oct 26). Everyone else: English + Russian. */
 const EN_ONLY_LISTS = ['Sparsh', 'Rajiv & Shalini'];
@@ -410,7 +410,7 @@ function buildFormItems_(f) {
   });
   const REF_RU = 'Если ещё не забронировали, напишите «пока нет»; если едете сами, напишите «свой транспорт». Ответы можно изменить позже.';
   f.addTextItem().setTitle(Q.idnames).setRequired(true)
-    .setHelpText(enRu_('For the hotel, spelt exactly as on your passport or ID.', 'Ваше полное имя, точно как в паспорте или документе (для отеля).'));
+    .setHelpText(enRu_('Full name as on your passport or ID.', 'Ваше полное имя, точно как в паспорте или документе (для отеля).'));
   f.addTextItem().setTitle(Q.phone).setRequired(true)
     .setHelpText(enRu_('With country code, e.g. +44 7700 900123 or +91 98100 00000', 'Телефон / WhatsApp с кодом страны, например +7 900 123 45 67'));
   f.addTextItem().setTitle(Q.email).setRequired(true).setHelpText(enRu_('', 'Электронная почта'));
