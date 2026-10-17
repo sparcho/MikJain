@@ -977,7 +977,7 @@ Yash & Anna’s wedding is almost here, and we’re so excited to celebrate with
 
 To help you plan your trip, here’s everything in one place:
 
-1. *Your registration form*: your own personal link is below. It takes about 2 minutes and helps us get your room, pickup and meals just right.
+1. *Your registration form*: your own personal link is below. It takes about 2 minutes and helps us get your room, check-in and meals just right.
 2. *Travel & Stay guide* (attached): getting to Jaisalmer, the hotel and photo ID
 3. *Outfit guides, Ladies and Gents* (attached): what to wear to each celebration
 
@@ -1016,7 +1016,7 @@ function guestNote(g,multi){
     ${row('Invitation',mates(g).length?esc('With '+mates(g).map(x=>x.name+(coming(x)?'':' (not coming)')).join(', ')+' · from Vedding'):'Just them · from Vedding')}${row('Arrangement',g.arrangement==='confirmed'?'Confirmed on the form':g.arrangement==='not right'?'<span class="c-alert">Says it’s not right: get in touch</span>':'')}${row('Names on ID',g.id_names&&esc(g.id_names))}${row('Form names',g.party_names&&esc(g.party_names))}
     ${row('Arriving',esc([fmt(g.arrive_date),g.arrive_time,g.arrive_mode,g.arrive_ref,g.pickup==='yes'?'pickup wanted':g.pickup==='no'?'no pickup':''].filter(Boolean).join(' · ')))}
     ${row('Leaving',esc([fmt(g.depart_date),g.depart_time,g.depart_mode,g.depart_ref,g.drop==='yes'?'drop wanted':g.drop==='no'?'no drop':''].filter(Boolean).join(' · ')))}
-    ${row('Extra nights',esc(g.extra_nights))}${row('Room',esc([g.room_block,g.room,g.room_with&&'with '+g.room_with].filter(Boolean).join(' · ')))}
+    ${row('Travel plans',esc(g.travel_plans))}${row('Extra nights',esc(g.extra_nights))}${row('Room',esc([g.room_block,g.room,g.room_with&&'with '+g.room_with].filter(Boolean).join(' · ')))}
     ${row('Food',esc([g.diet,g.diet_notes].filter(Boolean).join(' — ')))}${row('Photo ID',esc(g.id_status==='received'?'Received':g.id_status==='promised'?'Promised by 15 Nov':''))}${row('Other days',g.drivers?'Arriving earlier or leaving later: send a few local cab contacts':'')}${row('Notes',esc(g.notes))}
     ${row('Form',coming(g)&&!isCore(g)?(enOnly(g)?'English only':'English + Russian'):'')}${row('Link sent',g.sent_at?esc(fmt(g.sent_at)):'')}${row('Travel form',g.form_at?esc('Received '+fmt(String(g.form_at).slice(0,10))):coming(g)?'Not yet':'')}${row('Last change',esc([fmt(g.updated),g.updated_by].filter(Boolean).join(', by ')))}</dl>`;
   if(!canEdit())return`<div class="note scal">${head}${kv}</div>`;

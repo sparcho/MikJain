@@ -17,13 +17,13 @@ const FORM_DESC_EN = 'The big day is just around the corner: Yash & Anna are get
   + 'Join us at Fort Rajwada, Jaisalmer, for two days of love, colour and celebration.\n\n'
   + 'Check-in: Saturday 30 Jan 2027, from 11 AM\n'
   + 'Check-out: Monday 1 Feb 2027, 10 AM\n\n'
-  + 'This short form helps us get your room, pickup and meals just right. Everyone has their own personal link, so please fill it in just for yourself; it takes about 2 minutes.\n\n'
+  + 'This short form helps us get your room, check-in and meals just right. Everyone has their own personal link, so please fill it in just for yourself; it takes about 2 minutes.\n\n'
   + 'With love,\nTeam MikJain';
 const FORM_DESC_RU = 'Совсем скоро большой день: Яш и Анна женятся! (Ещё раз.) Для них очень важно, чтобы вы были рядом.\n\n'
   + 'Приглашаем вас в Форт Раджвада, Джайсалмер, на два дня любви, красок и праздника.\n\n'
   + 'Заезд: суббота, 30 января 2027, с 11:00\n'
   + 'Выезд: понедельник, 1 февраля 2027, в 10:00\n\n'
-  + 'Эта короткая форма поможет нам подготовить для вас номер, встречу и питание. У каждого гостя своя личная ссылка, поэтому, пожалуйста, заполните форму только за себя; это займёт около 2 минут.\n\n'
+  + 'Эта короткая форма поможет нам подготовить для вас номер, заселение и питание. У каждого гостя своя личная ссылка, поэтому, пожалуйста, заполните форму только за себя; это займёт около 2 минут.\n\n'
   + 'С любовью,\nКоманда MikJain';
 const FORM_DESC = FORM_DESC_EN + '\n\n—\n\n' + FORM_DESC_RU;
 /** Guests on these Vedding lists get the English-only copy of the form (Sparsh, 14 Oct 26). Everyone else: English + Russian. */
@@ -66,10 +66,13 @@ const Q = {
   id: 'Photo ID for hotel check-in',
   drivers: 'Arriving or leaving on another day?',
   notes: 'Anything else we should know?',
+  aWhen: 'When do you plan to arrive in Jaisalmer?',
+  dWhen: 'When do you plan to leave Jaisalmer?',
+  travel: 'Your travel details so far',
 };
 const TEXT_TABS = ['Tasks', 'Activity', 'Programme', 'Runsheet', 'Dates', 'Docs', 'People', 'Meta', 'Access', 'Guests', 'Rooms', 'Blocks'];
 const TASK_FIELDS = ['area', 'title', 'type', 'waitingOn', 'next', 'due', 'status', 'priority', 'notes'];
-const GUEST_EDIT = ['sent_at', 'id_status', 'drivers', 'rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
+const GUEST_EDIT = ['travel_plans', 'sent_at', 'id_status', 'drivers', 'rsvp', 'phone', 'email', 'from_city', 'party_size', 'party_names', 'arrive_date', 'arrive_time', 'arrive_mode', 'arrive_ref', 'pickup',
   'depart_date', 'depart_time', 'depart_mode', 'depart_ref', 'drop', 'extra_nights', 'room_block', 'room', 'room_with', 'diet', 'diet_notes', 'notes'];
 const PRIVATE_GUEST = ['phone', 'email'];
 
@@ -355,8 +358,11 @@ FORM_MAP[Q.dietNotes] = 'diet_notes';
 FORM_MAP[Q.id] = 'id_status';
 FORM_MAP[Q.drivers] = 'drivers';
 FORM_MAP[Q.notes] = 'notes';
+FORM_MAP[Q.aWhen] = 'arrive_when';
+FORM_MAP[Q.dWhen] = 'depart_when';
+FORM_MAP[Q.travel] = 'travel_plans';
 const TRAVEL_COPY = ['arrive_date', 'arrive_mode', 'arrive_time', 'arrive_ref', 'depart_date', 'depart_mode', 'depart_time', 'depart_ref', 'pickup', 'drop', 'extra_nights', 'id_status', 'drivers', 'arrangement', 'form_at'];
-const FORM_VERSION = '12';
+const FORM_VERSION = '13';
 /** Half-hour time choices in 12-hour format (KV, 14 Oct 26: no 24-hour clock). The bilingual form adds the 24-hour time in brackets for Russian guests. */
 function timeChoices_() {
   const out = [];
@@ -414,17 +420,16 @@ function buildFormItems_(f) {
   f.addTextItem().setTitle(Q.phone).setRequired(true)
     .setHelpText(enRu_('With country code, e.g. +44 7700 900123 or +91 98100 00000', 'Телефон / WhatsApp с кодом страны, например +7 900 123 45 67'));
   f.addTextItem().setTitle(Q.email).setRequired(true).setHelpText(enRu_('', 'Электронная почта'));
-  f.addSectionHeaderItem().setTitle('Your travel')
-    .setHelpText(enRu_('Transfers: pickups from Jaisalmer airport or station on Sat 30 Jan; drops on the morning of Mon 1 Feb. Arriving or leaving on another day? No problem: we’ll share a few local cab contacts you can book directly.',
-      'Ваша поездка. Трансфер: встречаем в аэропорту или на вокзале Джайсалмера в субботу, 30 января; отвозим утром в понедельник, 1 февраля. Приезжаете или уезжаете в другой день? Без проблем: мы пришлём контакты местных такси, которые можно заказать напрямую.'));
-  f.addDateItem().setTitle(Q.aDate).setIncludesYear(true).setRequired(true).setHelpText(enRu_('', 'Дата приезда в Джайсалмер'));
-  f.addMultipleChoiceItem().setTitle(Q.aMode).setChoiceValues([bi_('Air', 'Самолёт'), bi_('Train', 'Поезд'), bi_('Own transport', 'Свой транспорт')]).setRequired(true).setHelpText(enRu_('', 'Как вы приедете'));
-  f.addListItem().setTitle(Q.aTime).setChoiceValues(timeChoices_()).setRequired(true).setHelpText(enRu_('', 'Время прибытия (примерно)'));
-  f.addTextItem().setTitle(Q.aRef).setRequired(true).setHelpText(enRu_('Type ‘not booked yet’ or ‘own transport’ if you don’t have one. You can come back and edit your answers.', 'Номер рейса или поезда. ' + REF_RU));
-  f.addDateItem().setTitle(Q.dDate).setIncludesYear(true).setRequired(true).setHelpText(enRu_('', 'Дата отъезда из Джайсалмера'));
-  f.addMultipleChoiceItem().setTitle(Q.dMode).setChoiceValues([bi_('Air', 'Самолёт'), bi_('Train', 'Поезд'), bi_('Own transport', 'Свой транспорт')]).setRequired(true).setHelpText(enRu_('', 'Как вы уедете'));
-  f.addListItem().setTitle(Q.dTime).setChoiceValues(timeChoices_()).setRequired(true).setHelpText(enRu_('', 'Время отъезда (примерно)'));
-  f.addTextItem().setTitle(Q.dRef).setRequired(true).setHelpText(enRu_('Type ‘not booked yet’ or ‘own transport’ if you don’t have one. You can come back and edit your answers.', 'Номер рейса или поезда при отъезде. ' + REF_RU));
+  // Travel kept general and optional (17 Oct 26): no exact flights, times or transfer promises while Saturday flights are uncertain.
+  f.addSectionHeaderItem().setTitle('Your travel plans')
+    .setHelpText(enRu_('Just tell us what you know so far. Not decided yet? Choose ‘Not sure yet’; you can come back and edit your answers any time.',
+      'Ваши планы на поездку. Укажите то, что уже известно. Ещё не решили? Выберите «Пока не знаю»; ответы можно изменить в любой момент.'));
+  f.addMultipleChoiceItem().setTitle(Q.aWhen).setRequired(true).setHelpText(enRu_('', 'Когда вы планируете приехать в Джайсалмер?'))
+    .setChoiceValues([bi_('Before Fri 29 Jan', 'До пятницы, 29 января'), bi_('Fri 29 Jan', 'Пятница, 29 января'), bi_('Sat 30 Jan', 'Суббота, 30 января'), bi_('Not sure yet', 'Пока не знаю')]);
+  f.addMultipleChoiceItem().setTitle(Q.dWhen).setRequired(true).setHelpText(enRu_('', 'Когда вы планируете уехать из Джайсалмера?'))
+    .setChoiceValues([bi_('Sun 31 Jan', 'Воскресенье, 31 января'), bi_('Mon 1 Feb', 'Понедельник, 1 февраля'), bi_('After Mon 1 Feb', 'После понедельника, 1 февраля'), bi_('Not sure yet', 'Пока не знаю')]);
+  f.addParagraphTextItem().setTitle(Q.travel)
+    .setHelpText(enRu_('Optional. Flight or train, rough times, or driving: whatever you know. Or just TBD.', 'Необязательно. Самолёт или поезд, примерное время или на машине: всё, что уже известно. Или просто «пока не знаю».'));
   f.addMultipleChoiceItem().setTitle(Q.diet).setRequired(true).setHelpText(enRu_('', 'Предпочтения в еде'))
     .setChoiceValues([bi_('Vegetarian', 'Вегетарианское'), bi_('Jain (no onion, garlic or root vegetables)', 'Джайнское (без лука, чеснока и корнеплодов)'), bi_('Vegan', 'Веганское'), bi_('Non-vegetarian', 'С мясом')]);
   f.addCheckboxItem().setTitle(Q.id).setRequired(true)
@@ -507,11 +512,10 @@ function onTravelForm(e) {
     if (a.diet) a.diet = a.diet.split(' (')[0];
     if (a.arrive_time) a.arrive_time = to24_(a.arrive_time);
     if (a.depart_time) a.depart_time = to24_(a.depart_time);
-    // Hotel transfers only on 30 Jan (arrivals) and 1 Feb (departures), by air or train.
-    if (a.arrive_date) a.pickup = (a.arrive_date === '2027-01-30' && a.arrive_mode !== 'Own transport') ? 'yes' : 'no';
-    if (a.depart_date) a.drop = (a.depart_date === '2027-02-01' && a.depart_mode !== 'Own transport') ? 'yes' : 'no';
-    // Arriving or leaving on another day (not by own transport): they'll want a few local cab contacts.
-    if ((a.arrive_date && a.arrive_date !== '2027-01-30' && a.arrive_mode !== 'Own transport') || (a.depart_date && a.depart_date !== '2027-02-01' && a.depart_mode !== 'Own transport')) a.drivers = 'cab contacts';
+    // Rough plans only: an exact day goes into the date; anything else ('Before Fri 29 Jan', 'Not sure yet') into the ref as text.
+    const when = {};
+    if (a.arrive_when) { const d = { 'Fri 29 Jan': '2027-01-29', 'Sat 30 Jan': '2027-01-30' }[a.arrive_when]; when.arrive_date = d || ''; when.arrive_ref = d ? '' : (a.arrive_when === 'Not sure yet' ? 'TBD' : a.arrive_when); delete a.arrive_when; }
+    if (a.depart_when) { const d = { 'Sun 31 Jan': '2027-01-31', 'Mon 1 Feb': '2027-02-01' }[a.depart_when]; when.depart_date = d || ''; when.depart_ref = d ? '' : (a.depart_when === 'Not sure yet' ? 'TBD' : a.depart_when); delete a.depart_when; }
     if (a.id_status) a.id_status = 'promised';
     if (a.drivers && a.drivers !== 'cab contacts') a.drivers = 'send list';
     if (a.other_days) { if (/^no/i.test(a.other_days)) a.drivers = 'cab contacts'; delete a.other_days; }
@@ -530,6 +534,7 @@ function onTravelForm(e) {
     }
     const body = {};
     Object.keys(a).forEach(function (k) { if (k !== 'code' && k !== 'name' && a[k] !== '') body[k] = a[k]; });
+    Object.keys(when).forEach(function (k) { body[k] = when[k]; });
     body.form_at = new Date().toISOString();
     body.updated = today_();
     body.updated_by = 'Travel form';
@@ -609,7 +614,7 @@ function migrate_() {
 
   // ---- 11 Oct 26: one-page registration form, couples, new tracker items ----
   const gs = sh_('Guests'), gh = headers_('Guests');
-  ['household', 'id_status', 'drivers', 'id_names', 'arrangement', 'sent_at'].forEach(function (k) {
+  ['household', 'id_status', 'drivers', 'id_names', 'arrangement', 'sent_at', 'travel_plans'].forEach(function (k) {
     if (gh.indexOf(k) < 0) { gs.getRange(1, gs.getLastColumn() + 1).setValue(k).setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); gh.push(k); }
   });
   gs.createTextFinder('Yash & Ana').matchEntireCell(true).replaceAllWith('Yash & Anna');
