@@ -16,13 +16,13 @@ const FORM_TITLE = 'Yash & Anna · Jaisalmer · Guest registration';
 const FORM_DESC_EN = 'The big day is just around the corner: Yash & Anna are getting married! (Again.) It would mean the world to them to have you there.\n\n'
   + 'Join us at Fort Rajwada, Jaisalmer, for two days of love, colour and celebration.\n\n'
   + 'Check-in: Saturday 30 Jan 2027, from 11 AM\n'
-  + 'Check-out: Monday 1 Feb 2027, 10 AM\n\n'
+  + 'Check-out: Monday 1 Feb 2027, by 10 AM\n\n'
   + 'This short form helps us get your room, check-in and meals just right. Everyone has their own personal link, so please fill it in just for yourself; it takes about 2 minutes.\n\n'
   + 'With love,\nTeam MikJain';
 const FORM_DESC_RU = 'Совсем скоро большой день: Яш и Анна женятся! (Ещё раз.) Для них очень важно, чтобы вы были рядом.\n\n'
   + 'Приглашаем вас в Форт Раджвада, Джайсалмер, на два дня любви, красок и праздника.\n\n'
   + 'Заезд: суббота, 30 января 2027, с 11:00\n'
-  + 'Выезд: понедельник, 1 февраля 2027, в 10:00\n\n'
+  + 'Выезд: понедельник, 1 февраля 2027, до 10:00\n\n'
   + 'Эта короткая форма поможет нам подготовить для вас номер, заселение и питание. У каждого гостя своя личная ссылка, поэтому, пожалуйста, заполните форму только за себя; это займёт около 2 минут.\n\n'
   + 'С любовью,\nКоманда MikJain';
 const FORM_DESC = FORM_DESC_EN + '\n\n—\n\n' + FORM_DESC_RU;
@@ -637,6 +637,7 @@ function migrate_() {
   try { ensureEnglishForm_(); } catch (e) { Logger.log('English form: ' + e); }
   refreshIdHelp_(meta_().form_id, 'both');
   refreshIdHelp_(meta_().form_id_en, 'en');
+  try { applyRenames_(); } catch (e) { Logger.log('Renames: ' + e); }
   try { syncVedding_(); } catch (e) { Logger.log('Vedding sync: ' + e); }
   if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncVedding'; })) ScriptApp.newTrigger('syncVedding').timeBased().everyHours(6).create();
   fixWeekdays_();
@@ -743,6 +744,33 @@ function readVedding_(id) {
     }
   });
   return out;
+}
+
+/** Renames confirmed guests in Vedding AND the HQ in one go (LOCAL.renames), so the sync keeps their ids and links.
+ *  { id, from, to, couple } — `couple` puts a "C" on that Vedding row (that row + the next = one invitation). Safe to re-run. */
+function applyRenames_() {
+  const R = local_().renames || [];
+  if (!R.length) return;
+  const meta = meta_();
+  const sheet = SpreadsheetApp.openById(meta.source_vedding_id).getSheetByName('final guest list');
+  const v = sheet.getDataRange().getValues();
+  const COL = { 'Yash & Anna': 0, 'Sparsh': 11, 'Rajiv & Shalini': 22 };
+  const guests = read_('Guests');
+  R.forEach(function (o) {
+    const g = guests.find(function (x) { return x.id === o.id; });
+    if (!g) return;
+    const c = COL[g.list === 'Yash & Ana' ? 'Yash & Anna' : g.list];
+    if (c === undefined) return;
+    let row = -1;
+    for (let i = 0; i < v.length; i++) { const n = String(v[i][c] || '').trim(); if (n === o.from || n === o.to) { row = i; break; } }
+    if (row < 0) { Logger.log('Rename: ' + o.from + ' not found in Vedding'); return; }
+    if (String(v[row][c]).trim() !== o.to) sheet.getRange(row + 1, c + 1).setValue(o.to);
+    if (o.couple && !/^c$/i.test(String(v[row][c + 4] || '').trim())) sheet.getRange(row + 1, c + 5).setValue('C');
+    if (g.name !== o.to) {
+      upsert_('Guests', { id: g.id, name: o.to, updated: today_(), updated_by: 'Claude' });
+      log_({ name: 'Claude' }, g.id, 'Guest: ' + o.to, 'renamed from “' + g.name + '” (confirmed from their ID)');
+    }
+  });
 }
 
 /** Keeps Guests in step with Vedding (the source of truth for who is invited and who comes together):
