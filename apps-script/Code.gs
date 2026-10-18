@@ -30,6 +30,21 @@ const FORM_DESC = FORM_DESC_EN + '\n\n—\n\n' + FORM_DESC_RU;
 const EN_ONLY_LISTS = ['Sparsh', 'Rajiv & Shalini'];
 /** 'both' = English + Russian; 'en' = English only. Set by buildForm_ while a form is being built. */
 let FORM_LANG = 'both';
+/** Photo ID help (18 Oct 26: passport only for non-Indian citizens; no visa photo). */
+function idHelp_() {
+  return enRu_('The hotel needs a photo ID for every guest. Non-Indian citizens: passport. Indian citizens: passport, Aadhaar or driving licence. '
+    + 'Please send a clear photo by 15 November 2026 (' + idSend_() + ') and bring the original with you.',
+    'Фото документа для заселения. Отелю нужен документ с фото для каждого гостя. Для граждан других стран (не Индии): паспорт. Пожалуйста, отправьте чёткое фото до 15 ноября 2026 (' + idSendRu_() + ') и возьмите оригинал с собой.');
+}
+/** Refreshes the photo-ID help text on a live form in place (no rebuild, so replies and edit links stay intact). */
+function refreshIdHelp_(id, lang) {
+  if (!id) return;
+  try {
+    const f = FormApp.openById(id);
+    FORM_LANG = lang;
+    f.getItems().forEach(function (it) { if (it.getTitle() === Q.id) it.setHelpText(idHelp_()); });
+  } catch (e) { Logger.log('ID help: ' + e); } finally { FORM_LANG = 'both'; }
+}
 function formDesc_() { return FORM_LANG === 'en' ? FORM_DESC_EN : FORM_DESC; }
 /* Private values (phone numbers, task notes) live in LOCAL, which is only in the paste file, never in this repo. */
 function local_() { return (typeof LOCAL !== 'undefined') ? LOCAL : {}; }
@@ -433,9 +448,7 @@ function buildFormItems_(f) {
   f.addMultipleChoiceItem().setTitle(Q.diet).setRequired(true).setHelpText(enRu_('', 'Предпочтения в еде'))
     .setChoiceValues([bi_('Vegetarian', 'Вегетарианское'), bi_('Jain (no onion, garlic or root vegetables)', 'Джайнское (без лука, чеснока и корнеплодов)'), bi_('Vegan', 'Веганское'), bi_('Non-vegetarian', 'С мясом')]);
   f.addCheckboxItem().setTitle(Q.id).setRequired(true)
-    .setHelpText(enRu_('The hotel needs a photo ID for every guest. Non-Indian citizens: passport and Indian visa. Indian citizens: passport, Aadhaar or driving licence. '
-      + 'Please send a clear photo by 15 November 2026 (' + idSend_() + ') and bring the original with you.',
-      'Фото документа для заселения. Отелю нужен документ с фото для каждого гостя. Для граждан других стран (не Индии): паспорт и индийская виза. Пожалуйста, отправьте чёткое фото до 15 ноября 2026 (' + idSendRu_() + ') и возьмите оригинал с собой.'))
+    .setHelpText(idHelp_())
     .setChoiceValues([bi_('Understood. I’ll send my ID by 15 November', 'Понятно. Отправлю до 15 ноября')]);
   f.addParagraphTextItem().setTitle(Q.notes)
     .setHelpText(enRu_('Accessibility needs, questions, anything at all', 'Что-нибудь ещё, что нам стоит знать? Особые потребности, вопросы, что угодно.'));
@@ -622,6 +635,8 @@ function migrate_() {
     try { const f = FormApp.openById(meta.form_id); buildForm_(f); formEntries_(f); setMeta_('form_v', FORM_VERSION); } catch (e) { Logger.log('Form rebuild: ' + e); }
   }
   try { ensureEnglishForm_(); } catch (e) { Logger.log('English form: ' + e); }
+  refreshIdHelp_(meta_().form_id, 'both');
+  refreshIdHelp_(meta_().form_id_en, 'en');
   try { syncVedding_(); } catch (e) { Logger.log('Vedding sync: ' + e); }
   if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncVedding'; })) ScriptApp.newTrigger('syncVedding').timeBased().everyHours(6).create();
   fixWeekdays_();
