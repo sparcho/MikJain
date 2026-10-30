@@ -638,6 +638,7 @@ function migrate_() {
   refreshIdHelp_(meta_().form_id, 'both');
   refreshIdHelp_(meta_().form_id_en, 'en');
   try { applyRenames_(); } catch (e) { Logger.log('Renames: ' + e); }
+  try { addGuests_(); } catch (e) { Logger.log('Add guests: ' + e); }
   try { syncVedding_(); } catch (e) { Logger.log('Vedding sync: ' + e); }
   if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncVedding'; })) ScriptApp.newTrigger('syncVedding').timeBased().everyHours(6).create();
   fixWeekdays_();
@@ -773,6 +774,24 @@ function applyRenames_() {
   });
 }
 
+/** Guests added by the family that are not (yet) in Vedding: LOCAL.newGuests [{id,name,list,group,sex,form_lang}].
+ *  Added once by id; marked manual so the Vedding sync never drops them. If Dad later adds the same name to Vedding,
+ *  the sync matches it by name and keeps the id and link. */
+function addGuests_() {
+  const N = local_().newGuests || [];
+  if (!N.length) return;
+  const gs = sh_('Guests'), gh = headers_('Guests');
+  ['manual', 'form_lang'].forEach(function (k) {
+    if (gh.indexOf(k) < 0) { gs.getRange(1, gs.getLastColumn() + 1).setValue(k).setFontWeight('bold').setBackground('#5A1A1C').setFontColor('#FFFFFF'); gh.push(k); }
+  });
+  const guests = read_('Guests');
+  N.forEach(function (o) {
+    if (guests.some(function (x) { return x.id === o.id; })) return;
+    upsert_('Guests', { id: o.id, name: o.name, list: o.list, group: o.group || '', side: o.list, rsvp: o.rsvp || 'Y', sex: o.sex || '', manual: 'Y', form_lang: o.form_lang || '', updated: today_(), updated_by: 'Claude' });
+    log_({ name: 'Claude' }, o.id, 'Guest: ' + o.name, 'added to the guest list (not in Vedding yet)');
+  });
+}
+
 /** Keeps Guests in step with Vedding (the source of truth for who is invited and who comes together):
  *  adds new names, refreshes RSVP for rows nobody has edited in the HQ, and sets `household` (the id of the
  *  first person on each invitation). An invitation is a "C" row plus the next row, plus any following rows that
@@ -823,7 +842,7 @@ function syncVedding_() {
   });
   // 4. Rows no longer in Vedding: marked not coming (unless they already sent the form), so counts stay right.
   guests.forEach(function (x) {
-    if (used[x.id] || LISTS.indexOf(listOf(x.list)) < 0 || x.form_at || x.group === 'Not in Vedding') return;
+    if (used[x.id] || LISTS.indexOf(listOf(x.list)) < 0 || x.form_at || x.group === 'Not in Vedding' || x.manual === 'Y') return;
     upsert_('Guests', { id: x.id, rsvp: 'N', group: 'Not in Vedding', household: '', updated: today_(), updated_by: 'Vedding sync' });
     dropped++;
   });
