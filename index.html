@@ -970,7 +970,7 @@ const EN_ONLY_LISTS=['Sparsh','Rajiv & Shalini'];
 const enOnly=g=>EN_ONLY_LISTS.includes(g.list)||g.form_lang==='en';
 function personalLink(g){const m=S.meta;if(enOnly(g)){if(!m.form_url_en||!m.form_entry_code_en)return'';const u=m.form_url_en;return u+(u.includes('?')?'&':'?')+`usp=pp_url&entry.${m.form_entry_code_en}=${encodeURIComponent(g.id)}`}if(!m.form_url)return'';const o=onInvite(g).filter(x=>x.id!==g.id).map(x=>x.name),pn=(()=>{const all=[g.name,...o],n=all.length;return n===1?`${g.name} only (1 guest)`:`${all.slice(0,-1).join(', ')} and ${all[n-1]} (${n} guests, ${n===2?'sharing a room':'staying together'})`})();let u=m.form_url+(m.form_url.includes('?')?'&':'?')+'usp=pp_url';
   if(m.form_entry_name)u+=`&entry.${m.form_entry_name}=${encodeURIComponent(g.name)}`;if(m.form_entry_others)u+=`&entry.${m.form_entry_others}=${encodeURIComponent(pn)}`;if(m.form_entry_code)u+=`&entry.${m.form_entry_code}=${encodeURIComponent(g.id)}`;return u}
-const DEADLINE='25 October';
+const DEADLINE='25 November';
 const inviteText=(g,link)=>`Hi ${first(g.name)}!
 
 Yash & Anna’s wedding is almost here, and we’re so excited to celebrate with you at Fort Rajwada, Jaisalmer, on Sat 30 & Sun 31 January.
@@ -981,7 +981,7 @@ To help you plan your trip, here’s everything in one place:
 2. *Travel & Stay guide* (attached): getting to Jaisalmer, the hotel and photo ID
 3. *Outfit guides, Ladies and Gents* (attached): what to wear to each celebration
 
-Could you please fill in the form in the next few days?
+Could you please fill in the form by *${DEADLINE}*?
 
 ${link}
 
