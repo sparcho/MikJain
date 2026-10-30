@@ -787,7 +787,7 @@ function addGuests_() {
   const guests = read_('Guests');
   N.forEach(function (o) {
     if (guests.some(function (x) { return x.id === o.id; })) return;
-    upsert_('Guests', { id: o.id, name: o.name, list: o.list, group: o.group || '', side: o.list, rsvp: o.rsvp || 'Y', sex: o.sex || '', manual: 'Y', form_lang: o.form_lang || '', updated: today_(), updated_by: 'Claude' });
+    upsert_('Guests', { id: o.id, name: o.name, list: o.list, group: o.group || '', side: o.list, rsvp: o.rsvp || 'Y', sex: o.sex || '', manual: 'Y', form_lang: o.form_lang || '', notes: o.notes || '', updated: today_(), updated_by: 'Claude' });
     log_({ name: 'Claude' }, o.id, 'Guest: ' + o.name, 'added to the guest list (not in Vedding yet)');
   });
 }
