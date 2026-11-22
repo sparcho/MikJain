@@ -356,6 +356,48 @@ footer .lnk{color:var(--on-ox);margin-top:22px}
 .jr p b{font-weight:400;color:var(--ox)}
 .jr .jti{font:13.5px/1.35 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .jt{color:var(--adobe-d)}
+/* guest summary (top of Guests) */
+.gsum{padding:34px 0 6px}
+.gsum .gs-g{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.gs{background:none;border:0;border-left:1px solid var(--line);padding:20px 14px 18px;text-align:left;display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit;color:inherit}
+.gs:first-child{border-left:0;padding-left:2px}
+.gs b{font:400 44px/1 var(--serif)}
+.gs b small{font:400 22px/1 var(--serif);color:var(--adobe)}
+.gs small.s{font:13.5px/1.35 var(--sans);color:var(--muted)}
+.gs:hover .caps,.gs:focus-visible .caps{color:var(--rust)}
+.gs .bar2{margin:4px 0 2px}
+.gsum .todo{display:flex;flex-wrap:wrap;gap:8px 26px;margin:16px 0 0;padding:0;list-style:none;font:15px/1.4 var(--sans);color:var(--cocoa)}
+.gsum .todo li::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--mari-t);margin-right:9px;vertical-align:1px}
+.gsum .todo li.ok::before{background:var(--olive)}
+.gsum .todo b{font-weight:600}
+@media (max-width:860px){.gsum .gs-g{grid-template-columns:repeat(3,1fr)}.gs:nth-child(4){border-left:0;padding-left:2px}.gs:nth-child(n+4){border-top:1px solid var(--line)}}
+@media (max-width:640px){.gsum .gs-g{grid-template-columns:1fr 1fr}.gs{border-left:0;padding-left:2px}.gs:nth-child(even){border-left:1px solid var(--line);padding-left:14px}.gs:nth-child(n+3){border-top:1px solid var(--line)}.gs:nth-child(4){border-left:1px solid var(--line);padding-left:14px}.gs b{font-size:38px}}
+.gwhen{margin-top:34px}
+.gwhen .hd{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.gwhen .hd h3{font:400 26px/1.1 var(--serif);color:var(--ox);margin:0}
+.gwhen .hd h3 i{color:var(--rust)}
+.gdays{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.gday{background:none;border:0;border-left:1px solid var(--line);padding:16px 12px 14px;text-align:left;cursor:pointer;font:inherit;color:inherit;display:flex;flex-direction:column;gap:5px;position:relative}
+.gday:first-child{border-left:0;padding-left:2px}
+.gday .dn{font:400 19px/1.1 var(--serif);color:var(--cocoa)}
+.gday .ev{font:12.5px/1.3 var(--sans);color:var(--muted);min-height:2.6em}
+.gday b{font:400 40px/1 var(--serif);margin-top:4px}
+.gday .io{font:12.5px/1.45 var(--sans);color:var(--muted)}
+.gday .io em{font-style:normal;color:var(--olive);font-weight:600}.gday .io .out{color:var(--rust);font-weight:600}
+.gday.wed{background:linear-gradient(180deg,rgba(201,134,26,.07),transparent)}
+.gday[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--rust)}
+.gday:hover .dn{color:var(--rust)}
+.gdet{border-bottom:1px solid var(--line);padding:22px 0 26px}
+.gdet .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.gdet h4{font:400 20px/1.2 var(--serif);color:var(--ox);margin:0 0 10px}
+.gdet h4 small{font:600 10.5px/1 var(--sans);letter-spacing:.16em;color:var(--adobe-d);margin-left:8px}
+.gdet .nm{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:7px 0;border-top:1px solid var(--line);font:14px/1.35 var(--sans)}
+.gdet .nm span{color:var(--muted);font-size:12.5px;text-align:right}
+.gdet .nm i{grid-column:1/-1;font-style:normal;color:var(--muted);font-size:12.5px}
+.gdet .none{color:var(--muted);font:14px/1.4 var(--sans)}
+.gdet .fix{margin-top:16px;font:13.5px/1.4 var(--sans);color:var(--alert)}
+@media (max-width:860px){.gdays{grid-template-columns:repeat(3,1fr)}.gday:nth-child(4){border-left:0;padding-left:2px}.gday:nth-child(n+4){border-top:1px solid var(--line)}.gdet .cols{grid-template-columns:1fr}}
+@media (max-width:640px){.gdays{grid-template-columns:1fr 1fr}.gday{border-left:0;padding-left:2px}.gday:nth-child(even){border-left:1px solid var(--line);padding-left:12px}.gday:nth-child(n+3){border-top:1px solid var(--line)}.gday:nth-child(4){border-left:1px solid var(--line);padding-left:12px}.gday:nth-child(5){border-left:0;padding-left:2px}}
 .gstats2{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
 .gst{background:none;border:0;border-bottom:1px solid var(--line);padding:18px 6px;text-align:left;display:flex;flex-direction:column;gap:6px}
 .gst:nth-child(odd){border-right:1px solid var(--line)}.gst:nth-child(even){padding-left:22px}
@@ -728,6 +770,7 @@ button.lnkt:hover{color:var(--rust)}
     </div>
   </div>
   <div class="wrap">
+    <div class="gsum" id="gSum" aria-label="Guest summary"></div>
     <div class="tbar" id="gBar"><button class="lnk" id="gExp">Expand all</button><button class="lnk" id="gCol">Collapse all</button><span class="sp"></span></div>
     <div class="chapters" id="gBody"></div>
   </div>
@@ -1053,7 +1096,68 @@ function guestForm(g){
     <label><span>Dietary notes</span><input name="diet_notes" value="${v('diet_notes')}"></label>
     <label class="full"><span>Notes</span><textarea name="notes">${v('notes')}</textarea></label>
     <div class="acts full"><button class="btn rust" type="submit">Save guest</button><span class="msg" data-msg></span></div></form>`}
+/* Plain-English summary at the top of Guests: five numbers and what to do next. Tap a number to open that view. */
+const REG_CLOSES='2026-11-25';
+function renderGSum(){
+  const box=$('#gSum'),G=S.guests;if(!box)return;if(!G.length){box.innerHTML='';return}
+  const Y=G.filter(coming),N=G.filter(g=>/^n/i.test(g.rsvp||'')),T=G.length-Y.length-N.length;
+  const R=Y.filter(g=>!isCore(g)),F=R.filter(g=>g.form_at),todo=R.filter(g=>!g.form_at),unsent=todo.filter(g=>!g.sent_at);
+  const idIn=R.filter(g=>g.id_status==='received').length,idProm=R.filter(g=>g.id_status==='promised').length;
+  const arr=Y.filter(g=>parse(g.arrive_date)).length;
+  const pct=(a,b)=>b?Math.round(a/b*100):0,d=daysTo(REG_CLOSES);
+  const tile=(t,n,of,label,sub,c,tipTxt,bar)=>`<button class="gs" data-gtab="${t}" data-tip="${esc(tipTxt)}"><b class="num ${c}">${n}${of!=null?`<small> / ${of}</small>`:''}</b><span class="caps">${label}</span>${bar!=null?`<div class="bar2"><i style="width:${bar}%"></i></div>`:''}<small class="s">${sub}</small></button>`;
+  const tiles=[
+    tile('list',Y.length,null,'Coming',`${N.length} not coming${T?` · ${T} not sure`:''}`,'c-done','Guests who said yes. Tap to see the whole list.'),
+    tile('form',F.length,R.length,'Registered',`${pct(F.length,R.length)}% have filled in the travel form`,F.length===R.length?'c-done':'c-waiting','Guests (not counting our own family) who have filled in the travel form.',pct(F.length,R.length)),
+    tile('form',todo.length,null,'Still to register',unsent.length?`${unsent.length} not sent their link yet`:'All links sent; waiting for replies',todo.length?'c-open':'c-calm','Coming, but no travel form yet. Tap to see who.'),
+    tile('list',idIn,R.length,'Photo IDs in',`${idProm} said they’ll send one`,idIn===R.length?'c-done':'c-waiting','Passport (or Aadhaar for Indian guests) received for the hotel. The files are kept in GUEST_IDS on Sparsh’s computer.',pct(idIn,R.length)),
+    tile('arrivals',arr,Y.length,'Arrival date known',Y.length-arr?`${Y.length-arr} haven’t said yet`:'Everyone has told us',arr===Y.length?'c-done':'c-calm','Guests who have told us the day they arrive. Tap to see arrivals by day.',pct(arr,Y.length)),
+  ].join('');
+  const next=[];
+  if(todo.length)next.push(`<li><b>${todo.length}</b> still to register${d!=null?(d>0?`: the form closes in <b>${d} ${d===1?'day':'days'}</b> (${fmtShort(REG_CLOSES)})`:d===0?': the form closes <b>today</b>':`: the form closed on ${fmtShort(REG_CLOSES)}`):''}</li>`);
+  if(unsent.length)next.push(`<li><b>${unsent.length}</b> ${unsent.length===1?'guest hasn’t':'guests haven’t'} been sent their link</li>`);
+  if(idProm)next.push(`<li>Chase <b>${idProm}</b> for their photo ID</li>`);
+  if(!next.length)next.push('<li class="ok">Everyone is registered. Nothing to chase.</li>');
+  box.innerHTML=`<div class="gs-g">${tiles}</div><ul class="todo">${next.join('')}</ul>${whenHTML(Y)}`;
+}
+/* Who's here when: one column per day. Guests who haven't told us are expected from Sat 30 Jan to Mon 1 Feb. */
+const GDAYS=[['pre','Before 29 Jan','Arriving early'],['2027-01-29','Fri 29 Jan','Early arrivals'],['2027-01-30','Sat 30 Jan','Welcome lunch, mehendi · Sangeet Night'],['2027-01-31','Sun 31 Jan','Haldi · baraat · pheras'],['2027-02-01','Mon 1 Feb','Check-out by 10 am'],['post','After 1 Feb','Staying on']];
+function gStay(g){
+  const ix=k=>GDAYS.findIndex(d=>d[0]===k),ok=d=>d&&d>='2027-01-15'&&d<='2027-02-15';
+  let a=null,ab=false,d=null,db=false;
+  if(ok(g.arrive_date))a=g.arrive_date<'2027-01-29'?0:Math.max(0,ix(g.arrive_date));else if(/^before/i.test(g.arrive_ref||''))a=0;
+  if(g.arrive_date&&!ok(g.arrive_date))ab=true;
+  if(ok(g.depart_date))d=g.depart_date>'2027-02-01'?5:Math.max(0,ix(g.depart_date));else if(/^after/i.test(g.depart_ref||''))d=5;
+  if(g.depart_date&&!ok(g.depart_date))db=true;
+  return{a,d,ai:a??2,di:d??4,bad:ab||db};
+}
+function whenHTML(Y){
+  const st=Y.map(g=>({g,...gStay(g)}));
+  const tm=(g,A)=>[A?g.arrive_time:g.depart_time,A?g.arrive_mode:g.depart_mode,(A?g.arrive_ref:g.depart_ref)].filter(x=>x&&x!=='TBD').join(' · ');
+  const cols=GDAYS.map(([k,l,ev],i)=>{
+    const here=st.filter(x=>x.ai<=i&&x.di>=i).length,inC=st.filter(x=>x.a===i).length,outC=st.filter(x=>x.d===i).length;
+    const inU=i===2?st.filter(x=>x.a==null).length:0,outU=i===4?st.filter(x=>x.d==null).length:0;
+    const io=i===5?(outC?`<em>${outC}</em> staying on`:'&nbsp;'):[inC?`<em>+${inC}</em> arriving`:'',inU?`+${inU} expected (not said yet)`:'',outC?`<span class="out">−${outC}</span> leaving`:'',outU?`−${outU} expected (not said yet)`:''].filter(Boolean).join('<br>')||'&nbsp;';
+    return`<button class="gday${i===2||i===3?' wed':''}" data-gday="${k}" aria-pressed="${S.gDay===k}" data-tip="${esc(`${l}: ${here} people at the hotel. Tap to see names.`)}"><span class="dn">${l}</span><span class="ev">${ev}</span><b class="num ${here?(i===2||i===3?'c-done':'c-waiting'):'c-calm'}">${here}</b><span class="io">${io}</span></button>`}).join('');
+  let det='';
+  const i=GDAYS.findIndex(d=>d[0]===S.gDay);
+  if(i>=0){
+    const [k,l]=GDAYS[i],here=st.filter(x=>x.ai<=i&&x.di>=i);
+    const row=(x,A)=>`<div class="nm"><b>${esc(x.g.name)}</b><span>${esc(x.g.list||'')}</span>${(()=>{const t=tm(x.g,A)||(/^tbd$/i.test(String(x.g.travel_plans||'').trim())?'':String(x.g.travel_plans||''));return t?`<i>${esc(t)}</i>`:''})()}</div>`;
+    const list=(arr,A)=>arr.length?arr.sort((p,q)=>((A?p.g.arrive_time:p.g.depart_time)||'99').localeCompare((A?q.g.arrive_time:q.g.depart_time)||'99')||p.g.name.localeCompare(q.g.name)).map(x=>row(x,A)).join(''):'<p class="none">Nobody yet.</p>';
+    const ins=st.filter(x=>x.a===i),outs=st.filter(x=>x.d===i);
+    const unk=i===2?st.filter(x=>x.a==null):i===4?st.filter(x=>x.d==null):[];
+    const bad=st.filter(x=>x.bad);
+    det=`<div class="gdet"><div class="cols">
+      <div><h4>Arriving<small>${ins.length}</small></h4>${list(ins,true)}</div>
+      <div><h4>Leaving<small>${outs.length}</small></h4>${list(outs,false)}</div>
+      <div><h4>${unk.length?'Haven’t said yet':'At the hotel'}<small>${unk.length||here.length}</small></h4>${(unk.length?unk:here).sort((p,q)=>p.g.name.localeCompare(q.g.name)).map(x=>`<div class="nm"><b>${esc(x.g.name)}</b><span>${esc(x.g.list||'')}</span></div>`).join('')||'<p class="none">Nobody.</p>'}</div>
+    </div>${bad.length?`<p class="fix">Date to check: ${bad.map(x=>`${esc(x.g.name)} (${esc(fmt(x.g.arrive_date)||'')}${x.g.depart_date?' → '+esc(fmt(x.g.depart_date)):''})`).join(', ')}. Counted as Sat 30 Jan until it’s fixed.</p>`:''}</div>`;
+  }
+  return`<div class="gwhen"><div class="hd"><h3>Who’s here <i>when</i></h3><span class="caps">People at the hotel each day <span class="q" tabindex="0" data-tip="Built from the dates guests gave in the travel form. Anyone who hasn’t said yet is counted as arriving Sat 30 Jan and leaving Mon 1 Feb. Tap a day to see the names.">?</span></span></div><div class="gdays">${cols}</div>${det}</div>`;
+}
 function renderGuests(){
+  renderGSum();
   const G=S.guests,Y=G.filter(coming),F=Y.filter(g=>g.form_at);
   $('#gHead').innerHTML=G.length?`${Y.length} coming. <i>${F.length} travel ${F.length===1?'form':'forms'} in.</i>`:'Everyone who’s <i>coming.</i>';
   const lists=[...new Set(G.map(g=>g.list))];
@@ -1210,8 +1314,9 @@ const goTracker=f=>{S.f={status:'active',who:'',type:'',q:'',...f};$('#q').value
 
 /* ---------- events ---------- */
 document.addEventListener('click',async ev=>{
-  const el=ev.target.closest('[data-go],[data-open],[data-who],[data-group],[data-toggle],[data-s],[data-quick],[data-edit],[data-del],[data-confirmdel],[data-cancel],[data-addin],[data-gtab],[data-gch],[data-grow],[data-gedit],[data-copylink],[data-copymsg],[data-gsent],[data-copygroup],[data-copyform],[data-pday],[data-pnode],[data-plane],[data-cday]');if(!el)return;
+  const el=ev.target.closest('[data-gday],[data-go],[data-open],[data-who],[data-group],[data-toggle],[data-s],[data-quick],[data-edit],[data-del],[data-confirmdel],[data-cancel],[data-addin],[data-gtab],[data-gch],[data-grow],[data-gedit],[data-copylink],[data-copymsg],[data-gsent],[data-copygroup],[data-copyform],[data-pday],[data-pnode],[data-plane],[data-cday]');if(!el)return;
   const D=el.dataset;
+  if(D.gday){S.gDay=S.gDay===D.gday?null:D.gday;renderGSum();return}
   if(D.go){const g=D.go;goTracker(g==='decisions'?{type:'decision'}:{status:g});return}
   if(D.open){const t=S.tasks.find(x=>x.id===D.open);if(!t)return;goTracker({status:'all'});S.open.add(t.area);S.openRow=t.id;renderTracker();setTimeout(()=>document.getElementById('row-'+t.id)?.scrollIntoView({block:'center'}),60);return}
   if(D.who){goTracker({who:D.who});return}

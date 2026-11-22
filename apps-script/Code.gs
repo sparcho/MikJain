@@ -553,6 +553,7 @@ function onTravelForm(e) {
     body.updated_by = 'Travel form';
     if (g) {
       body.id = g.id;
+      if (g.id_status === 'received') delete body.id_status; // a re-submitted form never downgrades a received ID
       // The invitation (household) comes from Vedding only. Names typed in the form never add guests.
       if (/^no/i.test(a.arrangement || '')) {
         body.notes = ((g.notes ? g.notes + ' · ' : '') + 'Said our arrangement for them is NOT right: get in touch').slice(0, 1000);
@@ -703,6 +704,8 @@ function applyLocalUpdates_() {
     log_({ name: 'Claude' }, row.id, row.title, 'added');
   });
   (L.upserts || []).forEach(function (o) { upsert_(o.tab, o.row); });
+  // Wording changes across whole tabs, e.g. { tabs: ['Programme'], from: 'Sufi night', to: 'Musical night' }. Safe to re-run.
+  (L.replaceText || []).forEach(function (o) { (o.tabs || []).forEach(function (t) { sh_(t).createTextFinder(o.from).replaceAllWith(o.to); }); });
   const D = read_('Dates');
   (L.newDates || []).forEach(function (o) {
     if (D.some(function (d) { return d.what === o.what; })) return;
