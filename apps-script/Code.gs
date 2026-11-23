@@ -638,9 +638,9 @@ function migrate_() {
   try { ensureEnglishForm_(); } catch (e) { Logger.log('English form: ' + e); }
   refreshIdHelp_(meta_().form_id, 'both');
   refreshIdHelp_(meta_().form_id_en, 'en');
-  try { applyRenames_(); } catch (e) { Logger.log('Renames: ' + e); }
+  try { applyRenames_(); setMeta_('renames_error', ''); } catch (e) { Logger.log('Renames: ' + e); setMeta_('renames_error', new Date().toISOString() + ' ' + e + ' | ' + String(e && e.stack || '').slice(0, 400)); }
   try { addGuests_(); } catch (e) { Logger.log('Add guests: ' + e); }
-  try { syncVedding_(); } catch (e) { Logger.log('Vedding sync: ' + e); }
+  try { syncVedding_(); setMeta_('vedding_sync_error', ''); } catch (e) { Logger.log('Vedding sync: ' + e); setMeta_('vedding_sync_error', new Date().toISOString() + ' ' + e + ' | ' + String(e && e.stack || '').slice(0, 400)); }
   if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncVedding'; })) ScriptApp.newTrigger('syncVedding').timeBased().everyHours(6).create();
   fixWeekdays_();
   applyLocalUpdates_();
