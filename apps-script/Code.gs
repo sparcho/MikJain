@@ -724,6 +724,32 @@ function applyLocalUpdates_() {
 }
 
 /** Reads the Vedding "final guest list": three side-by-side lists, a "C" mark starts a couple (that row + the next). */
+/** Where each list starts in Vedding's "final guest list": found from the "… List" titles in the top rows,
+ *  so Dad can add or move columns. Falls back to the old layout (0 / 11 / 22). */
+function vedCols_(v) {
+  const out = {};
+  for (let i = 0; i < Math.min(10, v.length); i++) {
+    for (let j = 0; j < v[i].length; j++) {
+      const t = String(v[i][j] || '').trim();
+      if (!/list\s*$/i.test(t)) continue;
+      if (/yash|anna/i.test(t)) out['Yash & Anna'] = j;
+      else if (/sparsh/i.test(t)) out['Sparsh'] = j;
+      else if (/rj|rajiv|shalini/i.test(t)) out['Rajiv & Shalini'] = j;
+    }
+    if (Object.keys(out).length === 3) return out;
+  }
+  return { 'Yash & Anna': 0, 'Sparsh': 11, 'Rajiv & Shalini': 22 };
+}
+/** Vedding's day columns hold a day of the month: 15–31 = January 2027, 1–10 = February 2027. */
+function vedDay_(x) {
+  if (x instanceof Date) return Utilities.formatDate(x, TZ, 'yyyy-MM-dd');
+  const n = Number(String(x || '').trim());
+  if (!n || n !== Math.floor(n)) return '';
+  if (n >= 15 && n <= 31) return '2027-01-' + ('0' + n).slice(-2);
+  if (n >= 1 && n <= 10) return '2027-02-0' + n;
+  return '';
+}
+
 function readVedding_(id) {
   const rng = SpreadsheetApp.openById(id).getSheetByName('final guest list').getDataRange();
   const v = rng.getValues(), bg = rng.getBackgrounds();
@@ -734,17 +760,30 @@ function readVedding_(id) {
     const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
     return r >= 0xE0 && g >= 0x60 && g <= 0xD8 && b <= 0x80;
   };
-  const blocks = [{ c: 0, list: 'Yash & Anna' }, { c: 11, list: 'Sparsh' }, { c: 22, list: 'Rajiv & Shalini' }];
+  const cols = vedCols_(v);
+  const blocks = Object.keys(cols).map(function (k) { return { c: cols[k], list: k }; });
   const out = [];
   blocks.forEach(function (b) {
-    let group = '';
+    let group = '', hdr = null;
     for (let i = 6; i < v.length; i++) {
       const r = v[i], name = String(r[b.c] || '').trim();
-      if (!name) continue;
       const c1 = String(r[b.c + 1] || '').trim(), c2 = String(r[b.c + 2] || '').trim();
-      if (/save date sent/i.test(c1) || /^rsvp$/i.test(c2)) { group = name; continue; }
+      if (/save date sent/i.test(c1) || /^rsvp$/i.test(c2)) {
+        if (name) group = name;
+        hdr = {};   // travel columns by their heading: In, Mode, Out, Mode, ID
+        for (let j = b.c + 3; j < b.c + 12 && j < r.length; j++) {
+          const t = String(r[j] || '').trim().toLowerCase();
+          if (t === 'in') hdr.in = j; else if (t === 'out') hdr.out = j; else if (t === 'id') hdr.id = j;
+          else if (t === 'mode') { if (hdr.out == null) hdr.inMode = j; else hdr.outMode = j; }
+        }
+        continue;
+      }
+      if (!name) continue;
+      if (/\bevent\b/i.test(name)) break;   // a side table (e.g. "Mehendi 28th Event") starts below the guest list
       if (/total|list$/i.test(name)) continue;
-      out.push({ list: b.list, group: group, name: name, rsvp: c2, sex: String(r[b.c + 3] || '').trim(), couple: /^c$/i.test(String(r[b.c + 4] || '').trim()), core: isOrange(bg[i][b.c]) ? 'Y' : '' });
+      const g = function (k) { return hdr && hdr[k] != null ? r[hdr[k]] : ''; };
+      out.push({ list: b.list, group: group, name: name, rsvp: c2, sex: String(r[b.c + 3] || '').trim(), couple: /^c$/i.test(String(r[b.c + 4] || '').trim()), core: isOrange(bg[i][b.c]) ? 'Y' : '',
+        inDate: vedDay_(g('in')), inMode: String(g('inMode') || '').trim(), outDate: vedDay_(g('out')), outMode: String(g('outMode') || '').trim(), idFlag: String(g('id') || '').trim() });
     }
   });
   return out;
@@ -758,7 +797,7 @@ function applyRenames_() {
   const meta = meta_();
   const sheet = SpreadsheetApp.openById(meta.source_vedding_id).getSheetByName('final guest list');
   const v = sheet.getDataRange().getValues();
-  const COL = { 'Yash & Anna': 0, 'Sparsh': 11, 'Rajiv & Shalini': 22 };
+  const COL = vedCols_(v);
   const guests = read_('Guests');
   R.forEach(function (o) {
     const g = guests.find(function (x) { return x.id === o.id; });
@@ -772,7 +811,7 @@ function applyRenames_() {
     if (o.couple && !/^c$/i.test(String(v[row][c + 4] || '').trim())) sheet.getRange(row + 1, c + 5).setValue('C');
     if (g.name !== o.to) {
       upsert_('Guests', { id: g.id, name: o.to, updated: today_(), updated_by: 'Claude' });
-      log_({ name: 'Claude' }, g.id, 'Guest: ' + o.to, 'renamed from “' + g.name + '” (confirmed from their ID)');
+      log_({ name: 'Claude' }, g.id, 'Guest: ' + o.to, 'renamed from “' + g.name + '”' + (o.why ? ' (' + o.why + ')' : ''));
     }
   });
 }
@@ -855,6 +894,21 @@ function syncVedding_() {
     const fromSheet = /^(import from vedding|vedding sync)$/i.test(String(r.g.updated_by || ''));
     if (fromSheet && (String(r.g.rsvp || '') !== r.rsvp || String(r.g.sex || '') !== r.sex)) upsert_('Guests', { id: r.id, rsvp: r.rsvp, sex: r.sex, updated: today_(), updated_by: 'Vedding sync' });
   });
+  // Travel days, how they travel, and photo ID from Dad's columns in Vedding (In / Mode / Out / Mode / ID).
+  // Only fills what is still empty in the HQ, so answers from the travel form or edits in the HQ always win.
+  let travel = 0;
+  V.forEach(function (r) {
+    if (!r.id) return;
+    const g = r.g || {}, up = {};
+    if (r.inDate && !g.arrive_date) up.arrive_date = r.inDate;
+    if (r.inMode && !g.arrive_mode) up.arrive_mode = r.inMode;
+    if (r.outDate && !g.depart_date) up.depart_date = r.outDate;
+    if (r.outMode && !g.depart_mode) up.depart_mode = r.outMode;
+    if (/^y/i.test(r.idFlag) && g.id_status !== 'received') up.id_status = 'received';
+    if (!Object.keys(up).length) return;
+    up.id = r.id; up.updated = today_(); up.updated_by = g.updated_by && !/^(import from vedding|vedding sync)$/i.test(g.updated_by) ? g.updated_by : 'Vedding sync';
+    upsert_('Guests', up); travel++;
+  });
   // Invitations (households).
   const hh = {};
   for (let i = 0; i < V.length; i++) {
@@ -878,7 +932,7 @@ function syncVedding_() {
     if (String(g.core || '') !== (coreOf[g.id] || '')) body.core = coreOf[g.id] || '';
     if (Object.keys(body).length) { body.id = g.id; upsert_('Guests', body); }
   });
-  const msg = 'Vedding sync: ' + V.length + ' names, ' + added + ' added, ' + renamed + ' renamed, ' + dropped + ' no longer listed, ' + changed + ' invitation links updated';
+  const msg = 'Vedding sync: ' + V.length + ' names, ' + added + ' added, ' + renamed + ' renamed, ' + dropped + ' no longer listed, ' + changed + ' invitation links updated, ' + travel + ' with travel or ID from Dad’s columns';
   setMeta_('vedding_synced', new Date().toISOString());
   Logger.log(msg);
   return msg;
